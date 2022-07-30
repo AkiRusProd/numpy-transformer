@@ -10,7 +10,7 @@ urls=[
      'http://www.quest.dcs.shef.ac.uk/wmt16_files_mmt/mmt16_task1_test.tar.gz'
  ]
 
-path = "transformer/dataset/"
+path = "dataset/"
 filenames = ["mmt16_task1_test.tar.gz", "training.tar.gz", "validation.tar.gz"]
 
 
