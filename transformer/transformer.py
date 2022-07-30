@@ -19,7 +19,7 @@ def lowercase_seq(seq):
 
 
 # First step: prepare the data
-def import_multi30k_dataset(path = '/home/rustam/Coding/python/transformer/dataset/'):
+def import_multi30k_dataset(path = 'dataset/'):
     
     ret = []
     filenames = ["train", "val", "test"]
