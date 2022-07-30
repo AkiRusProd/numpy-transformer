@@ -242,6 +242,11 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 
 model = Transformer(encoder, decoder, PAD_INDEX)
 
+
+def fit(model):
+    pass
+
+
 # array = np.array([1, 2, 3, 4, 0, 0]).reshape(2, 3)
 # array2 = np.array([1, 2, 3, 4, 0, 0]).reshape(2, 3)
 

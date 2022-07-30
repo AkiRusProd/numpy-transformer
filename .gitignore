@@ -1,3 +1,5 @@
-transformer/dataset/
+*.tar.gz
+*.en
+*.de
 *.pyc
 *.pyo
