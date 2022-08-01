@@ -79,15 +79,15 @@ class MultiHeadAttention:
         Q_error = np.matmul(error, self.K)
         K_error = np.matmul(error.transpose(0, 1, 3, 2), self.Q)
 
-        V_error = V_error.reshape(V_error.shape[0], self.query_len, self.d_model)
-        Q_error = Q_error.reshape(Q_error.shape[0], self.key_len, self.d_model)
+        V_error = V_error.reshape(V_error.shape[0], self.value_len, self.d_model)
+        Q_error = Q_error.reshape(Q_error.shape[0], self.query_len, self.d_model)
         K_error = K_error.reshape(K_error.shape[0], self.key_len, self.d_model)
 
         V_error = self.V_linear.backward(V_error)
         Q_error = self.Q_linear.backward(Q_error)
         K_error = self.K_linear.backward(K_error)
 
-        return Q_error
+        return Q_error, K_error, V_error
 
 
         

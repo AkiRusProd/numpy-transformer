@@ -24,14 +24,16 @@ class BinaryCrossEntropy():
 
 
 class CategoricalCrossEntropy():
+    def __init__(self, ignore_index = None) -> None:
+        self.ignore_index = ignore_index
 
     def loss(self, y, t):
-
-        return - t * np.log(y)
+        
+        return np.where(t == self.ignore_index, 0, - t * np.log(y))
 
     def derivative(self, y, t):
 
-        return -t / y
+        return np.where(t == self.ignore_index, 0, -t / y)
 
 
 loss_functions = {

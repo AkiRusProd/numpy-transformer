@@ -38,11 +38,11 @@ class DecoderLayer():
         # print(_error.shape)
         error = self.enc_attn_layer_norm.backward(error + _error)
         # print(error.shape)
-        _error = self.encoder_attention.backward(self.dropout.backward(error))
+        _error, enc_error1, enc_error2 = self.encoder_attention.backward(self.dropout.backward(error))
         # print("mhead", _error.shape)
         error = self.self_attention_norm.backward(error + _error)
-        _error = self.self_attention.backward(self.dropout.backward(error))
-        return _error + error
+        _error, _error2, _error3 = self.self_attention.backward(self.dropout.backward(error))
+        return _error +_error2 + _error3 + error, enc_error1 + enc_error2
 
     def set_optimizer(self, optimizer):
         self.self_attention_norm.set_optimizer(optimizer)

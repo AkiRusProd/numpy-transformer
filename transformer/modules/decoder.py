@@ -48,10 +48,12 @@ class Decoder:
         
         error = self.fc_out.backward(error)
         
-
+        self.encoder_error = 0
         for layer in reversed(self.layers):
-            error = layer.backward(error)
-        self.encoder_error = error
+            error, ecn_error = layer.backward(error)
+            self.encoder_error += ecn_error
+        # print("IN DECODER TO ENCODER ERROR", error.shape)
+        # self.encoder_error = error
 
         error = self.dropout.backward(error)
 

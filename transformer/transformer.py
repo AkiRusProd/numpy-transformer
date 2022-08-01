@@ -9,7 +9,7 @@ from tqdm import tqdm
 from transformer.modules import Encoder
 from transformer.modules import Decoder
 from transformer.optimizers import Adam
-from transformer.losses import CategoricalCrossEntropy
+from transformer.losses import CategoricalCrossEntropy, BinaryCrossEntropy, MSE
 
 def filter_seq(seq):
     chars2remove = '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'
@@ -75,7 +75,7 @@ train_data, val_data, test_data = clear_dataset(train_data, val_data, test_data)
 # print(train_data)
 
 EPOCHS = 10
-BATCH_SIZE = 64
+BATCH_SIZE = 5
 
 PAD_TOKEN = '<pad>'
 SOS_TOKEN = '<sos>'
@@ -256,6 +256,7 @@ class Transformer():
             tqdm_range = tqdm((zip(source, target)), total = len(source))
             for source_batch, target_batch in tqdm_range:#zip(source, target):
                 
+                # print(source_batch.shape, target_batch[:,:-1].shape)
                 output, attention = self.forward(source_batch, target_batch[:,:-1])
                
                 _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
@@ -275,8 +276,31 @@ class Transformer():
         
 
 
-INPUT_DIM = len(train_data_vocabs[0])#10
-OUTPUT_DIM = len(train_data_vocabs[1])#5
+# INPUT_DIM = len(train_data_vocabs[0])#10
+# OUTPUT_DIM = len(train_data_vocabs[1])#5
+# HID_DIM = 256#512
+# ENC_LAYERS = 3
+# DEC_LAYERS = 3
+# ENC_HEADS = 8
+# DEC_HEADS = 8
+# FF_SIZE = 2048
+# ENC_DROPOUT = 0.1
+# DEC_DROPOUT = 0.1
+
+
+# encoder = Encoder(INPUT_DIM, ENC_HEADS, ENC_LAYERS, HID_DIM, FF_SIZE, ENC_DROPOUT)
+# decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPOUT)
+
+# print("batch0 shape", source[0].shape, target[0].shape)
+
+# model = Transformer(encoder, decoder, PAD_INDEX)
+# model.compile(optimizer = Adam(), loss_function = CategoricalCrossEntropy(ignore_index=PAD_INDEX))
+# model.fit([source[0]], [target[0]], epochs = 10, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
+
+
+
+INPUT_DIM = 10
+OUTPUT_DIM = 10
 HID_DIM = 256#512
 ENC_LAYERS = 3
 DEC_LAYERS = 3
@@ -290,18 +314,13 @@ DEC_DROPOUT = 0.1
 encoder = Encoder(INPUT_DIM, ENC_HEADS, ENC_LAYERS, HID_DIM, FF_SIZE, ENC_DROPOUT)
 decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPOUT)
 
+
+
+array = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
+array2 = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 model = Transformer(encoder, decoder, PAD_INDEX)
-model.compile(optimizer = Adam(), loss_function = CategoricalCrossEntropy())
-model.fit([source[0]], [target[0]], epochs = 10, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
-
-
-
-
-
-
-# array = np.array([1, 2, 3, 4, 0, 0]).reshape(2, 3)
-# array2 = np.array([1, 2, 3, 4, 0, 0]).reshape(2, 3)
-
+model.compile(optimizer = Adam(), loss_function = CategoricalCrossEntropy(ignore_index=PAD_INDEX))
+model.fit([array], [array2], epochs = 100, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
 # import time
 # start_time = time.time()
 
