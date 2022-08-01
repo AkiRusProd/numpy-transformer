@@ -1,5 +1,6 @@
 import numpy as np
 from transformer.layers.base.dense import Dense
+from transformer.layers.base.activation import Activation
 from transformer.layers.base.dropout import Dropout
 from transformer.activations import Softmax
 
@@ -18,14 +19,15 @@ class MultiHeadAttention:
         self.V_linear = Dense(input_shape = self.d_model, units_num = self.d_v * heads_num, use_bias = False) # self.W_V = np.random.randn(self.d_model, self.d_v)
         self.O_linear = Dense(input_shape = self.d_model, units_num = self.d_v * heads_num) # self.W_O = np.random.randn(self.d_model, self.heads_num * self.d_v)
 
-        self.activation = Softmax()
+        self.activation = Activation(Softmax())
 
         self.dropout = Dropout(dropout)
 
 
     def forward(self, query, key, value, mask):
         batch_size = key.shape[0]
-        key_len, query_len, value_len = key.shape[1], query.shape[1], value.shape[1]
+        
+        self.key_len, self.query_len, self.value_len = key.shape[1], query.shape[1], value.shape[1]
 
         #query = [batch size, query len, hid dim]
         #key = [batch size, key len, hid dim]
@@ -34,29 +36,77 @@ class MultiHeadAttention:
         K = self.K_linear.forward(key)
         Q = self.Q_linear.forward(query)
         V = self.V_linear.forward(value)
-
+        # print(K.shape, Q.shape, V.shape)
         # split heads_num
-        K = K.reshape(batch_size, self.heads_num, key_len, self.d_k)
-        Q = Q.reshape(batch_size, self.heads_num, query_len, self.d_q)
-        V = V.reshape(batch_size, self.heads_num, value_len, self.d_v)
+        self.K = K.reshape(batch_size, self.heads_num, self.key_len, self.d_k)
+        self.Q = Q.reshape(batch_size, self.heads_num, self.query_len, self.d_q)
+        self.V = V.reshape(batch_size, self.heads_num, self.value_len, self.d_v)
 
         # print(Q.shape, K.shape)
-        energy = np.matmul(Q, K.transpose(0, 1, 3, 2)) / np.sqrt(self.d_k)
+        energy = np.matmul(self.Q, self.K.transpose(0, 1, 3, 2)) / np.sqrt(self.d_k)
 
-        if mask is not None:
-            mask = mask[:, np.newaxis, ...]
+        self.mask = mask
+        if self.mask is not None:
+            self.mask = self.mask[:, np.newaxis, ...]
             # print(energy.shape, mask.shape, query_len, key_len)
-            energy = np.where(mask == 0, float("-1e20"), energy)
+            energy = np.where(self.mask == 0, float("-1e20"), energy)
         # print(energy.shape)
-        attention = self.activation.function(energy)
+        attention = self.activation.forward(energy)
 
-        output = np.matmul(self.dropout.forward(attention), V)
-        # print(output.shape)
-        concat_output = output.reshape(batch_size, query_len, self.heads_num * self.d_v) #self.d_model
+        self.dropout_attention = self.dropout.forward(attention)
+        output = np.matmul(self.dropout_attention, self.V)
+
+        concat_output = output.reshape(batch_size, self.query_len, self.heads_num * self.d_v) #self.d_model
 
         O = self.O_linear.forward(concat_output)
 
         return O, attention
+
+    def backward(self, error):
+        error = self.O_linear.backward(error)
+        
+        error = error.reshape(error.shape[0], self.heads_num, self.query_len, self.d_v)
+        V_error = np.matmul(self.dropout_attention.transpose(0, 1, 3, 2), error)
+        error = np.matmul(error, self.V.transpose(0, 1, 3, 2))
+        error = self.dropout.backward(error)
+        error = self.activation.backward(error)
+
+        if self.mask is not None:
+            error = np.where(self.mask == 0, 0, error)
+
+        error /= np.sqrt(self.d_k)
+
+        Q_error = np.matmul(error, self.K)
+        K_error = np.matmul(error.transpose(0, 1, 3, 2), self.Q)
+
+        V_error = V_error.reshape(V_error.shape[0], self.query_len, self.d_model)
+        Q_error = Q_error.reshape(Q_error.shape[0], self.key_len, self.d_model)
+        K_error = K_error.reshape(K_error.shape[0], self.key_len, self.d_model)
+
+        V_error = self.V_linear.backward(V_error)
+        Q_error = self.Q_linear.backward(Q_error)
+        K_error = self.K_linear.backward(K_error)
+
+        return Q_error
+
+
+        
+
+        
+
+    def set_optimizer(self, optimizer):
+        self.K_linear.set_optimizer(optimizer)
+        self.Q_linear.set_optimizer(optimizer)
+        self.V_linear.set_optimizer(optimizer)
+        self.O_linear.set_optimizer(optimizer)
+
+    def update_weights(self, layer_num):
+        layer_num = self.K_linear.update_weights(layer_num)
+        layer_num = self.Q_linear.update_weights(layer_num)
+        layer_num = self.V_linear.update_weights(layer_num)
+        layer_num = self.O_linear.update_weights(layer_num)
+
+        return layer_num
 
 
         

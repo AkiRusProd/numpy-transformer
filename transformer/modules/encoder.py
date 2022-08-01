@@ -32,6 +32,30 @@ class Encoder:
 
         return src
 
+    def backward(self, error):
+        
+        for layer in reversed(self.layers):
+            error = layer.backward(error)
+        
+        error = self.dropout.backward(error)
+        error = self.position_embedding.backward(error)
+        error = self.token_embedding.backward(error)
+        pass
+
+    def set_optimizer(self, optimizer):
+        self.token_embedding.set_optimizer(optimizer)
+
+        for layer in self.layers:
+            layer.set_optimizer(optimizer)
+
+    def update_weights(self):
+        layer_num = 1
+        layer_num = self.token_embedding.update_weights(layer_num)
+
+        for layer in self.layers:
+            layer_num = layer.update_weights(layer_num)
+
+
 # import torch
 # # positions = torch.arange(0, 10).unsqueeze(0).repeat(30, 1)
 # positions = torch.arange(0, 10).expand(30, 10)

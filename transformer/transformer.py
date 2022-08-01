@@ -5,8 +5,11 @@ sys.path[0] = str(Path(sys.path[0]).parent)
 
 import numpy as np
 import pickle as pkl
+from tqdm import tqdm
 from transformer.modules import Encoder
 from transformer.modules import Decoder
+from transformer.optimizers import Adam
+from transformer.losses import CategoricalCrossEntropy
 
 def filter_seq(seq):
     chars2remove = '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'
@@ -17,9 +20,7 @@ def lowercase_seq(seq):
     return seq.lower()
 
 
-
-# First step: prepare the data
-def import_multi30k_dataset(path = 'dataset/'):
+def import_multi30k_dataset(path = '/home/rustam/Coding/python/numpy-transformer/dataset/'): #/dataset
     
     ret = []
     filenames = ["train", "val", "test"]
@@ -73,6 +74,7 @@ def clear_dataset(*data):
 train_data, val_data, test_data = clear_dataset(train_data, val_data, test_data)
 # print(train_data)
 
+EPOCHS = 10
 BATCH_SIZE = 64
 
 PAD_TOKEN = '<pad>'
@@ -164,21 +166,33 @@ source, target = build_dataset(train_data, train_data_vocabs)
 # print(source[0])
 
 
-# Second step: build transformer
+
 class Transformer():
 
     def __init__(self, encoder, decoder, pad_idx) -> None:
         self.encoder = encoder
         self.decoder = decoder
-
         self.pad_idx = pad_idx
 
-    def load(self, path):
+        self.optimizer = Adam()
+        self.loss_function = CategoricalCrossEntropy()
 
+    def set_optimizer(self):
+        encoder.set_optimizer(self.optimizer)
+        decoder.set_optimizer(self.optimizer)
+
+    def compile(self, optimizer, loss_function):
+        self.optimizer = optimizer
+        self.loss_function = loss_function
+        
+
+    def load(self, path):
         pickle_encoder = open(f'{path}/encoder.pkl', 'rb')
         pickle_decoder = open(f'{path}/decoder.pkl', 'rb')
+
         self.encoder = pkl.load(pickle_encoder)
         self.decoder = pkl.load(pickle_decoder)
+
         pickle_encoder.close()
         pickle_decoder.close()
 
@@ -187,10 +201,13 @@ class Transformer():
     def save(self, path):
         if not os.path.exists(path):
             os.makedirs(path)
+
         pickle_encoder = open(f'{path}/encoder.pkl', 'wb')
         pickle_decoder = open(f'{path}/decoder.pkl', 'wb')
+
         pkl.dump(self.encoder, pickle_encoder)
         pkl.dump(self.decoder, pickle_decoder)
+
         pickle_encoder.close()
         pickle_decoder.close()
         
@@ -214,14 +231,47 @@ class Transformer():
         src_mask = self.get_pad_mask(src)
 
         trg_mask = self.get_pad_mask(trg) & self.get_sub_mask(trg)
-        # print("trg mask, src mask", trg_mask.shape, src_mask.shape)
 
         enc_src = self.encoder.forward(src, src_mask)
-        # print("enc:", enc_src.shape)
+
         out, attention = self.decoder.forward(trg, trg_mask, enc_src, src_mask)
         # output: (batch_size, target_seq_len, vocab_size)
         # attn: (batch_size, n_heads, target_seq_len, source_seq_len)
         return out, attention
+
+    def backward(self, error):
+        error = self.decoder.backward(error)
+        error = self.encoder.backward(self.decoder.encoder_error)
+
+    def update_weights(self):
+        self.encoder.update_weights()
+        self.decoder.update_weights()
+
+
+    def fit(self, source, target, epochs, save_every_epoch, save_path):
+        self.set_optimizer()
+        
+        loss_history = []
+        for epoch in range(epochs):
+            tqdm_range = tqdm((zip(source, target)), total = len(source))
+            for source_batch, target_batch in tqdm_range:#zip(source, target):
+                
+                output, attention = self.forward(source_batch, target_batch[:,:-1])
+               
+                _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
+                
+                error = self.loss_function.derivative(_output, target_batch[:, 1:].flatten()[:, np.newaxis])
+                
+                loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].flatten()[:, np.newaxis]).mean())
+
+                self.backward(error.reshape(output.shape))
+                self.update_weights()
+
+                tqdm_range.set_description(
+                        f"training | loss: {loss_history[-1]:.7f} | epoch {epoch + 1}/{epochs}" #loss: {loss:.4f}
+                    )
+            
+    
         
 
 
@@ -241,10 +291,12 @@ encoder = Encoder(INPUT_DIM, ENC_HEADS, ENC_LAYERS, HID_DIM, FF_SIZE, ENC_DROPOU
 decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPOUT)
 
 model = Transformer(encoder, decoder, PAD_INDEX)
+model.compile(optimizer = Adam(), loss_function = CategoricalCrossEntropy())
+model.fit([source[0]], [target[0]], epochs = 10, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
 
 
-def fit(model):
-    pass
+
+
 
 
 # array = np.array([1, 2, 3, 4, 0, 0]).reshape(2, 3)
@@ -252,11 +304,16 @@ def fit(model):
 
 # import time
 # start_time = time.time()
-# out, attention = model.forward(source[0], target[0])
+
+# model.set_optimizer()
+# out, attention = model.forward(array, array2)
 # print(out.shape)
 # print(out)
 # print(time.time() - start_time)
 
-model.save('transformer/saved models/test_transformer')
+# model.backward(out)
+# model.update_weights()
+
+# model.save('transformer/saved models/test_transformer')
 # model.load('transformer/saved models/test_transformer')
 

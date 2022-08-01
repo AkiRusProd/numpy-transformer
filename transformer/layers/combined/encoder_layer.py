@@ -24,3 +24,24 @@ class EncoderLayer:
         src = self.ff_layer_norm.forward(src + self.dropout.forward(_src))
 
         return src
+
+    def backward(self, error):
+        error = self.ff_layer_norm.backward(error)
+        _error = self.position_wise_feed_forward.backward(self.dropout.backward(error))
+        error = self.self_attention_norm.backward(error + _error)
+        _error = self.self_attention.backward(self.dropout.backward(error))
+        return _error + error
+
+    def set_optimizer(self, optimizer):
+        self.self_attention_norm.set_optimizer(optimizer)
+        self.ff_layer_norm.set_optimizer(optimizer)
+        self.self_attention.set_optimizer(optimizer)
+        self.position_wise_feed_forward.set_optimizer(optimizer)
+
+    def update_weights(self, layer_num):
+        layer_num = self.self_attention_norm.update_weights(layer_num)
+        layer_num = self.ff_layer_norm.update_weights(layer_num)
+        layer_num = self.self_attention.update_weights(layer_num)
+        layer_num = self.position_wise_feed_forward.update_weights(layer_num)
+
+        return layer_num

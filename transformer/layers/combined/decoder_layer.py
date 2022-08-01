@@ -29,3 +29,36 @@ class DecoderLayer():
         trg = self.ff_layer_norm.forward(trg + self.dropout.forward(_trg))
 
         return trg, attention
+
+    def backward(self, error):
+        # print(error.shape)
+        error = self.ff_layer_norm.backward(error)
+        # print(error.shape)
+        _error = self.position_wise_feed_forward.backward(self.dropout.backward(error))
+        # print(_error.shape)
+        error = self.enc_attn_layer_norm.backward(error + _error)
+        # print(error.shape)
+        _error = self.encoder_attention.backward(self.dropout.backward(error))
+        # print("mhead", _error.shape)
+        error = self.self_attention_norm.backward(error + _error)
+        _error = self.self_attention.backward(self.dropout.backward(error))
+        return _error + error
+
+    def set_optimizer(self, optimizer):
+        self.self_attention_norm.set_optimizer(optimizer)
+        self.enc_attn_layer_norm.set_optimizer(optimizer)
+        self.ff_layer_norm.set_optimizer(optimizer)
+        self.self_attention.set_optimizer(optimizer)
+        self.encoder_attention.set_optimizer(optimizer)
+        self.position_wise_feed_forward.set_optimizer(optimizer)
+
+    def update_weights(self, layer_num):
+        layer_num = self.self_attention_norm.update_weights(layer_num)
+        layer_num = self.enc_attn_layer_norm.update_weights(layer_num)
+        layer_num = self.ff_layer_norm.update_weights(layer_num)
+        layer_num = self.self_attention.update_weights(layer_num)
+        layer_num = self.encoder_attention.update_weights(layer_num)
+        layer_num = self.position_wise_feed_forward.update_weights(layer_num)
+
+        return layer_num
+

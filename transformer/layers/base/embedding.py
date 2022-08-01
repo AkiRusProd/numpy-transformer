@@ -75,7 +75,8 @@ class Embedding():
         return self.output_data
 
     def backward(self, error):        
-        self.grad_w = np.dot(np.transpose(self.input_data, axes = (0, 2, 1)), error).sum(axis = 0).sum(axis = 1).reshape(self.w.shape)
+        # self.grad_w = np.dot(np.transpose(self.input_data, axes = (0, 2, 1)), error).sum(axis = 0).sum(axis = 1).reshape(self.w.shape)
+        self.grad_w = np.matmul(np.transpose(self.input_data, axes = (0, 2, 1)), error).sum(axis = 0)
 
         # output_error = np.dot(error, self.w.T)
 
@@ -84,8 +85,8 @@ class Embedding():
 
     def update_weights(self, layer_num):
         self.w, self.v, self.m, self.v_hat, self.m_hat  = self.optimizer.update(self.grad_w, self.w, self.v, self.m, self.v_hat, self.m_hat, layer_num)
-    
 
+        return layer_num + 1
     def get_grads(self):
         return self.grad_w, self.grad_b
 

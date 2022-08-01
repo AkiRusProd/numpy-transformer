@@ -67,8 +67,9 @@ class Dense():
     def backward(self, error):
         error *= self.activation.derivative(self.output_data)
         
-        self.grad_w = np.dot(self.input_data.T, error)
-        self.grad_b = np.sum(error, axis = 0)
+        self.grad_w = np.sum(np.matmul(self.input_data.transpose(0, 2, 1), error), axis = 0)
+        self.grad_b = np.sum(error, axis = (0, 1))
+
 
         output_error = np.dot(error, self.w.T)
 
@@ -78,6 +79,8 @@ class Dense():
         self.w, self.v, self.m, self.v_hat, self.m_hat  = self.optimizer.update(self.grad_w, self.w, self.v, self.m, self.v_hat, self.m_hat, layer_num)
         if self.use_bias == True:
             self.b, self.vb, self.mb, self.vb_hat, self.mb_hat  = self.optimizer.update(self.grad_b, self.b, self.vb, self.mb, self.vb_hat, self.mb_hat, layer_num)
+        
+        return layer_num + 1
 
     def get_grads(self):
         return self.grad_w, self.grad_b

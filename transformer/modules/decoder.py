@@ -37,8 +37,40 @@ class Decoder:
             trg, attention = layer.forward(trg, trg_mask, src, src_mask)
         # print(trg.shape)
         output = self.fc_out.forward(trg)
-
+        
         activated_output = self.activation.forward(output)
 
 
         return activated_output, attention
+
+    def backward(self, error):
+        error = self.activation.backward(error)
+        
+        error = self.fc_out.backward(error)
+        
+
+        for layer in reversed(self.layers):
+            error = layer.backward(error)
+        self.encoder_error = error
+
+        error = self.dropout.backward(error)
+
+        error = self.position_embedding.backward(error)
+        error = self.token_embedding.backward(error)
+
+    def set_optimizer(self, optimizer):
+        self.token_embedding.set_optimizer(optimizer)
+
+        for layer in self.layers:
+            layer.set_optimizer(optimizer)
+
+        self.fc_out.set_optimizer(optimizer)
+
+    def update_weights(self):
+        layer_num = 1
+        self.token_embedding.update_weights(layer_num)
+
+        for layer in self.layers:
+            layer_num = layer.update_weights(layer_num)
+
+        self.fc_out.update_weights(layer_num)

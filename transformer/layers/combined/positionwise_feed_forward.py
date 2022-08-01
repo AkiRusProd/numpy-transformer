@@ -21,3 +21,20 @@ class PositionwiseFeedforward():
         X = self.fc_2.forward(X)
     
         return X
+
+    def backward(self, error):
+        error = self.fc_2.backward(error)
+        error = self.dropout.backward(error)
+        error = self.activation.backward(error)
+        error = self.fc_1.backward(error)
+        return error
+
+    def set_optimizer(self, optimizer):
+        self.fc_1.set_optimizer(optimizer)
+        self.fc_2.set_optimizer(optimizer)
+
+    def update_weights(self, layer_num):
+        layer_num = self.fc_1.update_weights(layer_num)
+        layer_num = self.fc_2.update_weights(layer_num)
+
+        return layer_num
