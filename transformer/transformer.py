@@ -220,7 +220,9 @@ class Transformer():
     def get_sub_mask(self, x):
         #x: (batch_size, seq_len)
         seq_len = x.shape[1]
-        return np.triu(np.ones((seq_len, seq_len)), k = 1).astype(int)
+        subsequent_mask = np.triu(np.ones((seq_len, seq_len)), k = 1).astype(int)
+        subsequent_mask = np.logical_not(subsequent_mask)
+        return subsequent_mask
 
     def forward(self, src, trg):
         #src: (batch_size, source_seq_len)

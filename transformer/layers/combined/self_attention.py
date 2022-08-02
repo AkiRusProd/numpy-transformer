@@ -49,7 +49,7 @@ class MultiHeadAttention:
         if self.mask is not None:
             self.mask = self.mask[:, np.newaxis, ...]
             # print(energy.shape, mask.shape, query_len, key_len)
-            energy = np.where(self.mask == 0, float("-1e20"), energy)
+            energy = np.where(self.mask == 0, float('-inf'), energy)#float("-1e20")
         # print(energy.shape)
         attention = self.activation.forward(energy)
 
