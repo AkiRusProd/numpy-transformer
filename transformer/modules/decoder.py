@@ -4,14 +4,14 @@ from transformer.layers.base.dense import Dense
 from transformer.layers.base.embedding import Embedding
 from transformer.layers.base.dropout import Dropout
 from transformer.layers.combined.decoder_layer import DecoderLayer
-from transformer.activations import Softmax
+from transformer.activations import Identity, Softmax
 from transformer.layers.combined.positional_encoding import PositionalEncoding
 
 class Decoder:
-    def __init__(self, trg_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 100):
+    def __init__(self, trg_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000):#5000
         # super(Decoder, self).__init__()
 
-        self.token_embedding    = Embedding(trg_vocab_size, d_model, max_length)
+        self.token_embedding    = Embedding(trg_vocab_size, d_model)
         self.position_embedding = PositionalEncoding(max_length, d_model, dropout) #pos embeding
 
         self.layers = []
@@ -22,7 +22,7 @@ class Decoder:
         self.dropout = Dropout(dropout)
         self.scale = np.sqrt(d_model)
 
-        self.activation = Activation(Softmax())
+        self.activation = Activation(Identity())
 
 
     def forward(self, trg, trg_mask, src, src_mask):

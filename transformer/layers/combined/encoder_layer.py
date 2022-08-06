@@ -9,8 +9,8 @@ class EncoderLayer:
     def __init__(self, d_model, heads_num, d_ff, dropout):
         super(EncoderLayer, self).__init__()
 
-        self.self_attention_norm = LayerNormalization(d_model)
-        self.ff_layer_norm = LayerNormalization(d_model)
+        self.self_attention_norm = LayerNormalization(epsilon=1e-6)
+        self.ff_layer_norm = LayerNormalization(epsilon=1e-6)
         self.self_attention = MultiHeadAttention(d_model, heads_num, dropout)
         self.position_wise_feed_forward = PositionwiseFeedforward(d_model, d_ff, dropout)
 

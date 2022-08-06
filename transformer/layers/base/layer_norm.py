@@ -37,15 +37,17 @@ class LayerNormalization():
     
 
     def build(self):
-        self.gamma = np.ones((1))
-        self.beta = np.zeros((1))
+        self.feature_size = None
+        # print(self.input_shape)
+        # self.gamma = None#np.ones(self.input_shape)#(1)
+        # self.beta = None#np.zeros(self.input_shape)#(1)
 
 
-        self.vg, self.mg         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-        self.vg_hat, self.mg_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+        # self.vg, self.mg         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+        # self.vg_hat, self.mg_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
 
-        self.vb, self.mb         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-        self.vb_hat, self.mb_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+        # self.vb, self.mb         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+        # self.vb_hat, self.mb_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
 
         
 
@@ -54,41 +56,73 @@ class LayerNormalization():
 
     def forward(self, X):
         self.input_data = X
-        self.batch_size = X.shape[0]
+        x_T = self.input_data.T
+        if self.feature_size is None: self.feature_size = np.prod(x_T.shape[:-1]) #x_T.shape[0]
 
-        if self.axis is None: self.axis = tuple(np.arange(len(self.input_data.shape))[1:])
+        if self.gamma is None:
+            self.gamma = np.ones(self.input_data.shape[1:])
+            self.beta = np.zeros(self.input_data.shape[1:])
+    
+            self.vg, self.mg         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+            self.vg_hat, self.mg_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+
+            self.vb, self.mb         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+            self.vb_hat, self.mb_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
         
-        self.mean = np.mean(self.input_data, axis = self.axis, keepdims = True)
-        self.var = np.var(self.input_data, axis = self.axis, keepdims = True)
+        self.mean = np.mean(x_T, axis = 0)
+        self.var = np.var(x_T,axis = 0)
         
     
-        self.X_centered = (self.input_data - self.mean)
+        self.X_centered = (x_T - self.mean)
         self.stddev_inv = 1 / np.sqrt(self.var + self.epsilon)
 
-        X_hat = self.X_centered * self.stddev_inv
-
-        self.output_data = self.gamma * X_hat + self.beta
+        self.X_hat_T = self.X_centered * self.stddev_inv
+        self.X_hat = self.X_hat_T.T
+        
+        self.output_data = self.gamma * self.X_hat + self.beta
 
         return self.output_data
 
         
 
     def backward(self, error):
-        
-        output_error = (1 / self.batch_size) * self.gamma * self.stddev_inv * (
-            self.batch_size * error
-            - np.sum(error, axis = self.axis, keepdims = True)
-            - self.X_centered * np.power(self.stddev_inv, 2) * np.sum(error * self.X_centered, axis = self.axis, keepdims = True)
+        error_T = error.T
+
+        #first variant
+        output_error = (1 / self.feature_size) * self.gamma[np.newaxis, :].T * self.stddev_inv * (
+            self.feature_size * error_T
+            - np.sum(error_T, axis = 0)
+            - self.X_centered * np.power(self.stddev_inv, 2) * np.sum(error_T * self.X_centered, axis = 0)
             )
 
-        X_hat = self.X_centered * self.stddev_inv
-        self.grad_gamma = np.sum(error * X_hat)
-        self.grad_beta = np.sum(error)
+        #second variant
+        # dX_hat = error_T * self.gamma[np.newaxis, :].T
+        # output_error = (1 / self.feature_size) * self.stddev_inv * (
+        #     self.feature_size * dX_hat
+        #     - np.sum(dX_hat, axis = 0)
+        #     - self.X_hat_T * np.sum(dX_hat * self.X_hat_T, axis = 0)
+        # )
+
+        #third (naive slow) variant
+        # x_T = self.input_data.T
+
+        # dX_hat = error_T * self.gamma[np.newaxis, :].T
+        # dvar = np.sum(dX_hat * self.X_centered, axis=0) * -.5 * self.stddev_inv**3
+        # dmu = np.sum(dX_hat * -self.stddev_inv, axis=0) + dvar * np.mean(-2. * self.X_centered, axis=0)
+
+        # output_error = (dX_hat * self.stddev_inv) + (dvar * 2 * self.X_centered / self.feature_size) + (dmu / self.feature_size)
+
+        output_error = output_error.T
+
+        
+        self.grad_gamma = np.sum(error * self.X_hat, axis = 0)
+        self.grad_beta = np.sum(error, axis = 0)
 
         
         return output_error
 
     def update_weights(self, layer_num):
+        # print(self.gamma.shape, self.beta.shape, self.grad_gamma.shape, self.grad_beta.shape)
         self.gamma, self.vg, self.mg, self.vg_hat, self.mg_hat  = self.optimizer.update(self.grad_gamma, self.gamma, self.vg, self.mg, self.vg_hat, self.mg_hat, layer_num)
         self.beta, self.vb, self.mb, self.vb_hat, self.mb_hat = self.optimizer.update(self.grad_beta, self.beta, self.vb, self.mb, self.vb_hat, self.mb_hat, layer_num)
 

@@ -35,10 +35,10 @@ class Embedding():
         self.v, self.m         = np.zeros_like(self.w), np.zeros_like(self.w)
         self.v_hat, self.m_hat = np.zeros_like(self.w), np.zeros_like(self.w)
 
-        if self.input_length is not None:
-            self.output_shape = (self.input_length, self.output_dim)
-        else:
-            print("Input_length is not set, can`t compute output_shape of the Embedding layer")
+        # if self.input_length is not None:
+        #     self.output_shape = (self.input_length, self.output_dim)
+        # else:
+        #     print("Input_length is not set, can`t compute output_shape of the Embedding layer")
 
     #one hot encoding
     def prepare_labels(self, batch_labels):

@@ -8,8 +8,9 @@ import pickle as pkl
 from tqdm import tqdm
 from transformer.modules import Encoder
 from transformer.modules import Decoder
-from transformer.optimizers import Adam
-from transformer.losses import CategoricalCrossEntropy, BinaryCrossEntropy, MSE
+from transformer.optimizers import Adam, Nadam, Momentum, RMSProp, SGD
+from transformer.losses import CategoricalCrossEntropy, BinaryCrossEntropy, MSE, CrossEntropy, TorchCrossEntropy
+import matplotlib.pyplot as plt
 
 def filter_seq(seq):
     chars2remove = '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'
@@ -74,7 +75,7 @@ def clear_dataset(*data):
 train_data, val_data, test_data = clear_dataset(train_data, val_data, test_data)
 # print(train_data)
 
-EPOCHS = 10
+# EPOCHS = 1
 BATCH_SIZE = 5
 
 PAD_TOKEN = '<pad>'
@@ -262,9 +263,9 @@ class Transformer():
                 output, attention = self.forward(source_batch, target_batch[:,:-1])
                
                 _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
-                
+                # print(_output)
                 error = self.loss_function.derivative(_output, target_batch[:, 1:].flatten()[:, np.newaxis])
-                
+                # print(error)
                 loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].flatten()[:, np.newaxis]).mean())
 
                 self.backward(error.reshape(output.shape))
@@ -273,9 +274,7 @@ class Transformer():
                 tqdm_range.set_description(
                         f"training | loss: {loss_history[-1]:.7f} | epoch {epoch + 1}/{epochs}" #loss: {loss:.4f}
                     )
-            
-    
-        
+        return loss_history
 
 
 # INPUT_DIM = len(train_data_vocabs[0])#10
@@ -304,8 +303,8 @@ class Transformer():
 INPUT_DIM = 10
 OUTPUT_DIM = 10
 HID_DIM = 256#512
-ENC_LAYERS = 3
-DEC_LAYERS = 3
+ENC_LAYERS = 6
+DEC_LAYERS = 6
 ENC_HEADS = 8
 DEC_HEADS = 8
 FF_SIZE = 2048
@@ -321,8 +320,20 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 array = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 array2 = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 model = Transformer(encoder, decoder, PAD_INDEX)
-model.compile(optimizer = Adam(), loss_function = CategoricalCrossEntropy(ignore_index=PAD_INDEX))
-model.fit([array], [array2], epochs = 100, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
+#lr = 0.00005; 1e-4
+model.compile(optimizer = Adam(alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9), loss_function = TorchCrossEntropy(ignore_index=PAD_INDEX))
+loss_history = model.fit([array], [array2], epochs = 1000, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
+
+#plot loss history
+def plot_loss_history(loss_history):
+    plt.plot(loss_history)
+    plt.title('Loss history')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.show()
+        
+
+plot_loss_history(loss_history)
 # import time
 # start_time = time.time()
 
@@ -338,3 +349,101 @@ model.fit([array], [array2], epochs = 100, save_every_epoch = 1, save_path = 'sa
 # model.save('transformer/saved models/test_transformer')
 # model.load('transformer/saved models/test_transformer')
 
+
+
+
+
+#TESTS
+import torch
+import torch.nn as nn
+from torch.autograd import Variable
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# output, attention = model.forward(array, array2[:,:-1])
+# target = array2
+# output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
+# t_target = torch.tensor([[1, 8, 3], [4, 2, 0]]).to(device)
+# # target = array2[:, 1:].flatten()[:, np.newaxis]
+# t_output = torch.tensor(output, requires_grad=True)#torch.from_numpy(output).float().to(device)
+# # target = torch.from_numpy(target).float().to(device)
+# # target = torch.from_numpy(target).float().to(device)
+# # print(output.view(-1, output.size(-1)).shape, target[:, 1:].contiguous().view(-1).shape)
+# # print(output.shape, target.shape)
+
+# criterion = nn.CrossEntropyLoss(ignore_index=PAD_INDEX)
+
+# loss = criterion(
+#             t_output,  # (batch_size * (target_seq_len - 1), vocab_size)
+#             t_target[:, 1:].contiguous().view(-1) # (batch_size * (target_seq_len - 1))
+#         )
+# print("torchloss", loss)
+# print("model loss and der")
+# print(model.loss_function.loss(output, target[:, 1:].flatten()[:, np.newaxis]).mean())
+# print(model.loss_function.derivative(output, target[:, 1:].flatten()[:, np.newaxis]))
+# # loss.backward()
+# # print("loss")
+# # print(loss)
+# # print(loss.item())
+# print(t_output.shape, t_target[:, 1:].contiguous().view(-1).shape)
+# grad = torch.autograd.grad(loss, t_output, retain_graph=True)
+# print(grad)
+
+
+# loss = nn.CrossEntropyLoss()
+# input = torch.randn(3, 5, requires_grad=True)
+# target = torch.empty(3, dtype=torch.long).random_(5)
+# output = loss(input, target)
+# output.backward()
+
+# print(output)
+
+
+y = np.random.normal(0, 1, (2, 3))
+t = np.random.normal(0, 1, (2, 3))
+
+my_loss = MSE()
+print(my_loss.loss(y, t).mean())
+print(my_loss.derivative(y, t)/3)
+
+
+criterion = nn.MSELoss()
+y = torch.tensor(y, requires_grad=True).float()
+t = torch.from_numpy(t).float()
+torch_loss = criterion(y, t)
+print(torch_loss)
+# torch_loss.backward()
+# print(torch_loss)
+grad = torch.autograd.grad(torch_loss, y, retain_graph=True)
+print(grad)
+
+
+
+
+# u, v = torch.tensor([1.,2.], requires_grad=True), torch.tensor([3.,4.], requires_grad=True)
+# print(v.shape)
+# z = u.dot(v)         # tensor(11., grad_fn=<DotBackward>)
+ 
+# z.backward()          # запускаем вычисление градиентов
+ 
+# print(u.grad)         # tensor([3., 4.])
+# print(v.grad) 
+
+
+# print(torch.dot(z, torch.transpose(v, 0)))
+u, v = np.array([[1.,2.]], ndmin=2), np.array([[3.,4., 5],[6,7,8]], ndmin=2)
+# print(v.shape)
+z = u.dot(v)         # 11.
+# print(np.dot(z, v.T))
+# print(np.dot(v, z.T))
+print(np.dot(u.T, z))
+print(np.dot(z.T, u))
+
+
+
+x = torch.tensor([2.], requires_grad=True)
+
+
+k = x
+y = x * 3 + k
+
+grad = torch.autograd.grad(y, x, retain_graph=True)
+print(grad)

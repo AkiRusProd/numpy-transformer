@@ -28,7 +28,7 @@ class PositionalEncoding():
         """ x: (batch_size, seq_len, d_model)
         """
         x = x + self.pe[:x.shape[0], :]  # (batch_size, seq_len, d_model)
-        x = self.dropout.forward(x)  # (batch_size, seq_len, d_model)
+        # x = self.dropout.forward(x)  # (batch_size, seq_len, d_model)
 
         # x: (batch_size, seq_len, d_model)
         return x
@@ -36,7 +36,7 @@ class PositionalEncoding():
     def backward(self, error):
         """ error: (batch_size, seq_len, d_model)
         """
-        error = self.dropout.backward(error)
+        # error = self.dropout.backward(error)
 
         return error
 
