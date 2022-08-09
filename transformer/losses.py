@@ -1,5 +1,5 @@
 import numpy as np
-from transformer.activations import Softmax
+from transformer.activations import Sigmoid, Softmax, ReLU, LogSoftmax
 
 
 class MSE():
@@ -38,29 +38,48 @@ class CategoricalCrossEntropy():
 
 
 class CrossEntropy():
-    def __init__(self, ignore_index) -> None:
+    def __init__(self, ignore_index = None) -> None:
         self.ignore_index = ignore_index
-        self.softmax = Softmax()
+        # self.softmax = Softmax()
+        self.log_softmax = LogSoftmax()
+        # self.af = ReLU()
 
     def loss(self, y, t):
-        m = t.shape[0]
-        p = self.softmax.function(y)
-        log_likelihood = -np.log(p[range(m),t])
-        loss = np.sum(log_likelihood) / m
-        return np.where(t == self.ignore_index, 0, loss)
+        log_softmax = self.log_softmax.function(y) #np.log(self.softmax.function(y))
+        nll_loss = -log_softmax[np.arange(len(t)), t]
+        
+        return np.where(t == self.ignore_index, 0, nll_loss)
 
     def derivative(self, y, t):
-        """
-        X is the output from fully connected layer (num_examples x num_classes)
-        y is labels (num_examples x 1)
-            Note that y is not one-hot encoded vector. 
-            It can be computed as y.argmax(axis=1) from one-hot encoded vectors of labels if required.
-        """
-        m = t.shape[0]
-        grad = self.softmax.function(y)
-        grad[range(m),t] -= 1
-        grad = grad/m
-        return np.where(t == self.ignore_index, 0, grad)
+        batch_size = y.shape[0]
+        err = 1/batch_size
+        nll_loss_der = -1 * np.where(np.isin(y, y[np.arange(len(t)), t]), err, 0)
+       
+        output_err = self.log_softmax.jacobian_derivative(y, nll_loss_der)
+        
+        return np.where(t.reshape(-1, 1) == self.ignore_index, 0, output_err)
+
+    # def loss(self, y, t):
+    #     softmax = self.softmax.function(y)
+    #     nll_loss = -np.log(softmax[np.arange(len(t)), t])
+
+    #     return np.where(t == self.ignore_index, 0, nll_loss)
+
+    # def derivative(self, y, t):
+    #     batch_size = y.shape[0]
+    #     err = 1/batch_size
+    #     nll_loss_der = -1 * np.where(np.isin(y, y[np.arange(len(t)), t]), err, 0) #OK
+
+    #     #dlog(S(x))/d x = 1/S(x) * dS(x)/dx = 1/S(x) * S(x) * (1 - S(x)) = 1 - S(x)
+    #     # log_softmax_der = 1 / self.softmax.function(nll_loss_der) * self.softmax.derivative(nll_loss_der) # = 1 - self.softmax.function(y)
+    #     log_softmax_der = 1 - self.softmax.function(nll_loss_der)
+        
+    #     #compute nll loss derivative
+    #     # return np.where(t == self.ignore_index, 0, grad)
+    #     # return np.where(t == self.ignore_index, 0, -self.softmax.derivative(y)[np.arange(len(t)), t])
+    #     # return np.where(t == self.ignore_index, 0, log_softmax_der)
+    #     return log_softmax_der
+
 
 
 import torch

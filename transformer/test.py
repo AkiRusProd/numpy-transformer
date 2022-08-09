@@ -1,6 +1,6 @@
-# import sys
-# from pathlib import Path
-# sys.path[0] = str(Path(sys.path[0]).parent)
+import sys
+from pathlib import Path
+sys.path[0] = str(Path(sys.path[0]).parent)
 
 # import numpy as np
 # from transformer.layers.base.dense import Dense
@@ -618,6 +618,208 @@ print("-----------------------------------------------------")
 print(output4.shape)
 print("-----------------------------------------------------")
 
-a = np.array([10, 3, 2])
+# a = np.array([10, 3, 2])
 
-print(np.prod(a[:-1]))
+# print(np.prod(a[:-1]))
+import torch
+import torch.nn as nn
+from transformer.losses import TorchCrossEntropy
+from transformer.losses import CrossEntropy
+
+input = np.random.normal(0, 1, (4, 10))
+target = np.random.randint(0, 10, (2, 3))
+target = target[:, 1:].flatten()#[:, np.newaxis]
+# print(input.shape, target.shape)
+# loss = TorchCrossEntropy()
+# print(loss.loss(input, target[:, 1:].flatten()[:, np.newaxis]))
+
+# loss = CrossEntropy()
+# print(loss.loss(input, target[:, 1:].flatten()[:, np.newaxis]).mean())
+
+batch_size, n_classes = 6, 3
+input = torch.randn(batch_size, n_classes)
+target = torch.randint(n_classes, size=(batch_size,), dtype=torch.long)#.reshape(-1, 1)
+
+print(input.shape, target.shape)
+def log_softmax(x): return np.log(np.exp(x) / np.exp(x).sum(-1, keepdims = True))#x - x.exp().sum(-1).log().unsqueeze(-1) #np.log(np.exp(x) / np.exp(x).sum(-1, keepdims = True))
+def nll(input, target): return -input[range(target.shape[0]), target].mean()
+# print(-input[range(target.shape[0]), target])
+# print(-input[range(target.shape[0]), target.reshape(-1, 1)])
+
+pred = log_softmax(input)
+loss = nll(pred, target)
+print(loss.shape)
+print(loss)
+
+loss = TorchCrossEntropy()
+# print(loss.loss(input, target))
+# print(loss.derivative(input, target))
+
+loss = CrossEntropy()
+print(loss.loss(np.asarray(input), np.asarray(target)).mean())
+print(loss.derivative(np.asarray(input), np.asarray(target)))
+
+
+
+
+
+
+# # CrossEntropy
+# # print(input)
+# t_input = torch.tensor(input, requires_grad=True)
+# output = nn.LogSoftmax(dim=-1)(t_input)
+
+# loss = nn.NLLLoss()
+# torch_loss = loss(output, torch.tensor(target))
+# print(torch_loss)
+# torch_loss.backward()
+# print(t_input.grad)
+
+# # CrossEntropy2
+# t_input = torch.tensor(input, requires_grad=True)
+# output = nn.Softmax(dim=-1)(t_input)
+# log = torch.log(output)
+# loss = nn.NLLLoss()
+# torch_loss = loss(log, torch.tensor(target))
+# print(torch_loss)
+# torch_loss.backward()
+# print(t_input.grad)
+
+
+
+t_input = torch.tensor(input, requires_grad=True)
+output = nn.ReLU()(t_input)
+# log = torch.log(output)
+loss = nn.NLLLoss()
+torch_loss = loss(output, torch.tensor(target))
+print(torch_loss)
+torch_loss.backward()
+print(t_input.grad)
+
+
+
+
+
+
+#NLLLoss
+# input = torch.tensor(input, requires_grad=True)
+
+# loss = nn.NLLLoss()
+# torch_loss = loss(input, torch.tensor(target))
+# print(torch_loss)
+# torch_loss.backward()
+# print(input.grad)
+
+# input = torch.tensor(input, requires_grad=True)
+# log = torch.log(input)
+# loss = nn.NLLLoss()
+# torch_loss = loss(log, torch.tensor(target))
+# print(torch_loss)
+# torch_loss.backward()
+# print(input.grad)
+
+
+#LogSoftmx
+# input = torch.tensor(input, requires_grad=True)
+# output = nn.LogSoftmax(dim=-1)(input)
+# output.backward()
+# print(input.grad)
+
+# print( torch.autograd.grad(torch_loss, torch.tensor(input, requires_grad=True), retain_graph=True))
+# print(loss.)
+# # import torch
+# import torch.nn as nn
+# # import math
+
+# loss = nn.CrossEntropyLoss()
+# # input  = torch.randn(1, 5, requires_grad= True)
+# # target = torch.empty(1, dtype = torch.long).random_(5)
+# output = loss(torch.tensor(input, requires_grad=True), torch.tensor(target)[:, 1:].contiguous().view(-1))
+# print(output)
+
+# print("Введите 5 категорий:", input)
+# print('Чтобы вычислить истинную категорию потерь', target)
+# print('loss=', output)
+# # Результаты самостоятельного расчета
+# first = 0
+# for i in range(1):
+#     first -= input[i][target[i]]
+# second = 0
+# for i in range(1):
+#     for j in range(5):
+#         second += math.exp(input[i][j])
+# res = 0
+# res += first + math.log(second)
+# print('Результат собственного расчета:', res)
+
+
+from transformer.activations import Softmax
+
+
+# act = Softmax()
+# print(act.function(input))
+# print(act.derivative(input))
+
+
+# totch_Act = nn.ReLU()(torch.tensor(input, requires_grad=True))
+# # t_out = totch_Act(torch.tensor(input, requires_grad=True))
+# # grad = totch_Act.retain_grad()
+# # print(grad)
+# # totch_Act.sum().backward()
+# print(totch_Act.sum().backward())
+# print(torch.autograd.grad(totch_Act, torch.tensor(input, requires_grad=True).float(), retain_graph=True))
+
+
+# def Softmax_func(x):
+#     '''
+#     Performs the softmax activation on a given set of inputs
+#     Input: x (N,k) ndarray (N: no. of samples, k: no. of nodes)
+#     Returns: 
+#     Note: Works for 2D arrays only(rows for samples, columns for nodes/outputs)
+#     '''
+#     max_x = np.amax(x, 1).reshape(x.shape[0],1) # Get the row-wise maximum
+#     e_x = np.exp(x - max_x ) # For stability
+#     return e_x / e_x.sum(axis=1, keepdims=True) 
+
+
+# def Softmax_grad(x): # Best implementation (VERY FAST)
+#     '''Returns the jacobian of the Softmax function for the given set of inputs.
+#     Inputs:
+#     x: should be a 2d array where the rows correspond to the samples
+#         and the columns correspond to the nodes.
+#     Returns: jacobian
+#     '''
+#     s = Softmax_func(x)
+#     a = np.eye(s.shape[-1])
+#     temp1 = np.zeros((s.shape[0], s.shape[1], s.shape[1]),dtype=np.float32)
+#     temp2 = np.zeros((s.shape[0], s.shape[1], s.shape[1]),dtype=np.float32)
+#     temp1 = np.einsum('ij,jk->ijk',s,a)
+#     temp2 = np.einsum('ij,ik->ijk',s,s)
+#     return temp1-temp2
+
+# input = np.random.normal(0, 1, (1, 3))
+# print("softmax grad:", Softmax_grad(input))
+
+# from transformer.activations import Softmax
+# softmax_act = Softmax()
+# print("MY softmax/ only diag")
+# print(softmax_act.derivative(input))
+# print("full softmax")
+# print(softmax_act.derivative2(input))
+# # print(softmax_act.derivative(input) * input)
+
+
+
+# softmax = softmax_act.function(input)
+# softmax = np.reshape(softmax, (1, -1))
+
+# d_softmax = (                                                           
+#     softmax * np.identity(softmax.size)                                 
+#     - softmax.transpose() @ softmax)
+
+# print("d_softmax\n", d_softmax)
+# grad = input
+# grad = np.reshape(grad, (1, -1))
+# input_grad = grad @ d_softmax
+# print("fd\n")
+# print(input_grad)

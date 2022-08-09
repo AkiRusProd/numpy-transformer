@@ -76,7 +76,7 @@ train_data, val_data, test_data = clear_dataset(train_data, val_data, test_data)
 # print(train_data)
 
 # EPOCHS = 1
-BATCH_SIZE = 5
+BATCH_SIZE = 2
 
 PAD_TOKEN = '<pad>'
 SOS_TOKEN = '<sos>'
@@ -264,9 +264,9 @@ class Transformer():
                
                 _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
                 # print(_output)
-                error = self.loss_function.derivative(_output, target_batch[:, 1:].flatten()[:, np.newaxis])
+                error = self.loss_function.derivative(_output, target_batch[:, 1:].flatten())#[:, np.newaxis]
                 # print(error)
-                loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].flatten()[:, np.newaxis]).mean())
+                loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].flatten()).mean())#[:, np.newaxis]
 
                 self.backward(error.reshape(output.shape))
                 self.update_weights()
@@ -300,14 +300,16 @@ class Transformer():
 
 
 
-INPUT_DIM = 10
-OUTPUT_DIM = 10
+INPUT_DIM = 10#len(train_data_vocabs[0])#10
+OUTPUT_DIM = 10#len(train_data_vocabs[1])#5
+# INPUT_DIM = 10
+# OUTPUT_DIM = 10
 HID_DIM = 256#512
-ENC_LAYERS = 6
-DEC_LAYERS = 6
+ENC_LAYERS = 3
+DEC_LAYERS = 3
 ENC_HEADS = 8
 DEC_HEADS = 8
-FF_SIZE = 2048
+FF_SIZE = 512#2048
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
@@ -321,7 +323,7 @@ array = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 array2 = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 model = Transformer(encoder, decoder, PAD_INDEX)
 #lr = 0.00005; 1e-4
-model.compile(optimizer = Adam(alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9), loss_function = TorchCrossEntropy(ignore_index=PAD_INDEX))
+model.compile(optimizer = Adam(alpha = 0.0005), loss_function = CrossEntropy(ignore_index=PAD_INDEX))#alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9
 loss_history = model.fit([array], [array2], epochs = 1000, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
 
 #plot loss history

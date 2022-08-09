@@ -40,4 +40,6 @@ class Activation():
         return self.activation.function(X)
 
     def backward(self, error):
+        # if self.activation.__class__.__name__ == "Softmax": #If act der is Jacobian matrix
+        #     return self.activation.jacobian_derivative2(self.input_data, error)
         return error * self.activation.derivative(self.input_data)

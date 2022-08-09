@@ -34,16 +34,99 @@ class Tanh():
 
 
 class Softmax():
+    def __init__(self, axis = -1) -> None:
+        self.axis = axis
 
     def function(self, x):
-        e_x = np.exp(x - np.max(x, axis = -1, keepdims=True))
+        e_x = np.exp(x - np.max(x, axis = self.axis, keepdims=True))
         
-        return e_x / np.sum(e_x, axis = -1, keepdims=True)
+        self.softmax =  e_x / np.sum(e_x, axis = self.axis, keepdims=True)
+        return self.softmax
 
-    def derivative(self, x):
+    def derivative(self, x):# i=j
         f_x = self.function(x)
         
         return f_x * (1.0 - f_x)
+
+    
+    def jacobian_derivative(self, x, grad = None):
+        batch_size = x.shape[0]
+        softmax = self.function(x)
+        
+        J = softmax[:, :, np.newaxis] * np.tile(np.identity(softmax.shape[1]), (softmax.shape[0], 1, 1)) - (softmax[:, np.newaxis, :].transpose(0, 2, 1) @ softmax[:, np.newaxis, :]) #OK FOR DIM = -1 (D, N)
+        # J = softmax[:, :, np.newaxis] * np.tile(np.identity(softmax.shape[1]), (softmax.shape[0], 1, 1)) - np.einsum('ij, ik -> ijk', softmax, softmax) #np.matmul(softmax[:, :, None], softmax[:, None, :])
+        input_grad =  grad[:, np.newaxis, :] @ J
+        
+        return input_grad.reshape(x.shape) / batch_size
+    # def derivative2(self, x, grad = None): #неправильно отсносительно моей реализации/ х и есть инпут
+    #     #https://e2eml.school/softmax.html
+    #     softmax = self.function(x).reshape(1, -1)
+    #     grad = grad.reshape(1, -1)
+    #     d_softmax = (softmax * np.identity(softmax.size)   #Jacobian matrix                      
+    #                 - softmax.transpose() @ softmax)
+    #     #https://suzyahyah.github.io/calculus/machine%20learning/2018/04/04/Jacobian-and-Backpropagation.html
+    #     input_grad = grad @ d_softmax
+    #     print(d_softmax)
+
+    #     return input_grad.reshape(x.shape)
+
+    # def derivative3(self, x, grad = None):
+    #     softmax = self.function(x)
+    #     s = softmax.reshape(-1,1)
+    #     # print(np.diagflat(s) - np.dot(s, s.T))
+    #     return  (grad.reshape(1, -1) @ (np.diagflat(s) - np.dot(s, s.T))).reshape(x.shape)
+
+
+    # def derivative5(self, x, grad = None):
+    #     '''Returns the jacobian of the Softmax function for the given set of inputs.
+    #     Inputs:
+    #     x: should be a 2d array where the rows correspond to the samples
+    #         and the columns correspond to the nodes.
+    #     Returns: jacobian
+    #     '''
+    #     s = self.function(x)
+    #     a = np.eye(s.shape[-1])
+    #     temp1 = np.zeros((s.shape[0], s.shape[1], s.shape[1]),dtype=np.float32)
+    #     temp2 = np.zeros((s.shape[0], s.shape[1], s.shape[1]),dtype=np.float32)
+    #     temp1 = np.einsum('ij,jk->ijk',s,a)
+    #     temp2 = np.einsum('ij,ik->ijk',s,s)
+
+    #     J = temp1 - temp2
+    #     # print(J.shape, grad[:, np.newaxis, :].shape)
+    #     return grad[:, np.newaxis, :] @ J
+
+    # def derivative(self, grad):  i!=j
+    #     #https://sgugger.github.io/a-simple-neural-net-in-numpy.html
+    #     return self.softmax * (grad -(grad * self.softmax).sum(axis=1)[:,None])
+
+class LogSoftmax():
+    def __init__(self, axis = -1) -> None:
+        self.axis = axis
+
+    def softmax_function(self, x):
+        e_x = np.exp(x - np.max(x, axis = self.axis, keepdims=True))
+        
+        self.softmax =  e_x / np.sum(e_x, axis = self.axis, keepdims=True)
+        return self.softmax
+
+    def function(self, x):
+        self.log_softmax = np.log(self.softmax_function(x))
+        return self.log_softmax
+
+    # def derivative(self, x):# for i==j
+    #     f_x = self.function(x)
+        
+    #     return (1.0 - f_x)
+
+    def jacobian_derivative(self, x, grad = None): #input (N, D)
+        batch_size = x.shape[0]
+        softmax = self.softmax_function(x)
+
+        J = np.tile(np.identity(softmax.shape[1]), (softmax.shape[0], 1, 1)) - (np.ones((x.shape[0], x.shape[1], 1)) @ softmax[:, np.newaxis, :])
+        
+        input_grad =  grad[:, np.newaxis, :] @ J
+        
+        return input_grad.reshape(x.shape) / batch_size
 
 
 class Softplus():
