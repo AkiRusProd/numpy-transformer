@@ -114,7 +114,7 @@ def build_vocab(dataset, toks_and_inds, min_freq = 1):
 
     return en_vocab, de_vocab
 
-train_data_vocabs = build_vocab(train_data, toks_and_inds, min_freq = 2)
+train_data_vocabs = build_vocab(train_data, toks_and_inds, min_freq = 10)
 print(len(train_data_vocabs[0]), len(train_data_vocabs[1]))
 
 
@@ -300,8 +300,8 @@ class Transformer():
 
 
 
-INPUT_DIM = 10#len(train_data_vocabs[0])#10
-OUTPUT_DIM = 10#len(train_data_vocabs[1])#5
+INPUT_DIM = len(train_data_vocabs[0])#10
+OUTPUT_DIM = len(train_data_vocabs[1])#5
 # INPUT_DIM = 10
 # OUTPUT_DIM = 10
 HID_DIM = 256#512
@@ -324,7 +324,7 @@ array2 = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 model = Transformer(encoder, decoder, PAD_INDEX)
 #lr = 0.00005; 1e-4
 model.compile(optimizer = Adam(alpha = 0.0005), loss_function = CrossEntropy(ignore_index=PAD_INDEX))#alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9
-loss_history = model.fit([array], [array2], epochs = 1000, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
+loss_history = model.fit(source, target, epochs = 10, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
 
 #plot loss history
 def plot_loss_history(loss_history):

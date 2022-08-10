@@ -87,7 +87,7 @@ mse_loss_derivative = mse_loss.derivative(activation_output, target)
 print("mse_loss_derivative\n", mse_loss_derivative *2/3)
 # activation_output_derivative = activation.derivative(input) * mse_loss_derivative *2/3
 activation_output_derivative = activation.jacobian_derivative(input, mse_loss_derivative *2/3) #1D OK
-print("activation_output_derivative\n", activation_output_derivative/2)
+print("activation_output_derivative\n", activation_output_derivative)
 
 
 
@@ -155,3 +155,27 @@ print(torch.sum(t_input, dim = 1, keepdim=True))
 # # print(softmax.shape)
 # print(np.einsum('ij, ik -> ijk', softmax, softmax))
 # print(np.matmul(softmax[:, :, None], softmax[:, None, :]))
+
+
+# zer_arr = torch.zeros(250, 7600 * 7600)
+
+# from tempfile import mkdtemp
+# import os.path as path
+# filename = path.join(mkdtemp(), 'newfile.dat')
+
+# fp = np.memmap(filename, dtype='float32', mode='w+', shape=(3,4))
+# print(fp)
+
+
+# data = np.arange(12, dtype='float32')
+# data.shape = (3,4)
+# fp[:] = data[:]
+# print(fp)
+
+# print(fp.filename == path.abspath(filename))
+
+# fp.flush()
+
+# newfp = np.memmap(filename, dtype='float32', mode='r', shape=(3,4))
+# print(newfp)
+# print(filename)

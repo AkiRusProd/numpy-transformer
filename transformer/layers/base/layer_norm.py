@@ -12,8 +12,10 @@ class LayerNormalization():
             output: the normalized input data with same shape
     """
 
-    def __init__(self, epsilon = 0.001, input_shape = None):
-
+    def __init__(self, normalized_shape = None, epsilon = 0.001):#, input_shape = None
+        
+        self.normalized_shape = normalized_shape
+        self.normalized_axis = None
         self.epsilon  = epsilon#ValuesChecker.check_float_variable(epsilon, "epsilon")
 
         self.gamma = None
@@ -28,7 +30,7 @@ class LayerNormalization():
         self.optimizer = None
 
         self.axis = None
-        self.input_shape = input_shape#ValuesChecker.check_input_dim(input_shape, input_dim = None)
+        # self.input_shape = input_shape#ValuesChecker.check_input_dim(input_shape, input_dim = None)
 
         self.build()
     
@@ -38,36 +40,37 @@ class LayerNormalization():
 
     def build(self):
         self.feature_size = None
-        # print(self.input_shape)
-        # self.gamma = None#np.ones(self.input_shape)#(1)
-        # self.beta = None#np.zeros(self.input_shape)#(1)
+
+        if self.normalized_shape is not None:
+            self.gamma = np.ones(self.normalized_shape)
+            self.beta = np.zeros(self.normalized_shape)
 
 
-        # self.vg, self.mg         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-        # self.vg_hat, self.mg_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-
-        # self.vb, self.mb         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-        # self.vb_hat, self.mb_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-
-        
-
-        self.output_shape = self.input_shape
-
-
-    def forward(self, X):
-        self.input_data = X
-        x_T = self.input_data.T
-        if self.feature_size is None: self.feature_size = np.prod(x_T.shape[:-1]) #x_T.shape[0]
-
-        if self.gamma is None:
-            self.gamma = np.ones(self.input_data.shape[1:])
-            self.beta = np.zeros(self.input_data.shape[1:])
-    
             self.vg, self.mg         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
             self.vg_hat, self.mg_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
 
             self.vb, self.mb         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
             self.vb_hat, self.mb_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+        
+
+        
+
+        # self.output_shape = self.input_shape
+
+
+    def forward(self, X):
+        self.input_data = X
+        x_T = self.input_data.T
+        
+        # if self.feature_size is None: self.feature_size = np.prod(x_T.shape[:-1]) #x_T.shape[0]
+
+        if self.normalized_shape is None:
+            self.normalized_shape = self.input_data.shape[1:]
+
+            self.build()
+  
+        self.normalized_axis = tuple(np.arange(self.input_data.ndim - self.gamma.ndim)) 
+        self.feature_size = self.gamma.size
         
         self.mean = np.mean(x_T, axis = 0)
         self.var = np.var(x_T,axis = 0)
@@ -89,7 +92,7 @@ class LayerNormalization():
         error_T = error.T
 
         #first variant
-        output_error = (1 / self.feature_size) * self.gamma[np.newaxis, :].T * self.stddev_inv * (
+        output_error = (1 / self.feature_size) * np.expand_dims(self.gamma, axis = self.normalized_axis).T * self.stddev_inv * (#self.gamma[np.newaxis, :].T
             self.feature_size * error_T
             - np.sum(error_T, axis = 0)
             - self.X_centered * np.power(self.stddev_inv, 2) * np.sum(error_T * self.X_centered, axis = 0)
@@ -115,9 +118,8 @@ class LayerNormalization():
         output_error = output_error.T
 
         
-        self.grad_gamma = np.sum(error * self.X_hat, axis = 0)
-        self.grad_beta = np.sum(error, axis = 0)
-
+        self.grad_gamma = np.sum(error * self.X_hat, axis = self.normalized_axis)
+        self.grad_beta = np.sum(error, axis = self.normalized_axis)
         
         return output_error
 
