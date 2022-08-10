@@ -251,7 +251,7 @@ class Transformer():
         self.decoder.update_weights()
 
 
-    def fit(self, source, target, epochs, save_every_epoch, save_path):
+    def fit(self, source, target, epochs, save_every_epochs, save_path = None):
         self.set_optimizer()
         
         loss_history = []
@@ -274,6 +274,10 @@ class Transformer():
                 tqdm_range.set_description(
                         f"training | loss: {loss_history[-1]:.7f} | epoch {epoch + 1}/{epochs}" #loss: {loss:.4f}
                     )
+
+            if (save_path is not None) and (epoch % save_every_epochs == 0):
+                self.save(save_path + f'/{epoch}')
+                
         return loss_history
 
 
