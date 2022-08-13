@@ -114,7 +114,7 @@ def build_vocab(dataset, toks_and_inds, min_freq = 1):
 
     return en_vocab, de_vocab
 
-train_data_vocabs = build_vocab(train_data, toks_and_inds, min_freq = 10)
+train_data_vocabs = build_vocab(train_data, toks_and_inds, min_freq = 100)
 print(len(train_data_vocabs[0]), len(train_data_vocabs[1]))
 
 
@@ -327,8 +327,22 @@ array = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 array2 = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 model = Transformer(encoder, decoder, PAD_INDEX)
 #lr = 0.00005; 1e-4
+# def data_gen(V, batch, nbatches):
+#     src_batch = []
+#     trg_batch = []
+#     "Generate random data for a src-tgt copy task."
+#     for i in range(nbatches):
+#         data = np.random.randint(1, V, size=(batch, 6))
+#         data[:, 0] = 1
+
+#         src_batch.append(data)
+#         trg_batch.append(data)
+#     return src_batch, trg_batch
+
+# source, target = data_gen(10, 16, 1)
+
 model.compile(optimizer = Adam(alpha = 0.0005), loss_function = CrossEntropy(ignore_index=PAD_INDEX))#alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9
-loss_history = model.fit(source, target, epochs = 10, save_every_epoch = 1, save_path = 'saved models/#2FgS6_transformer')
+loss_history = model.fit([source[10]], [target[10]], epochs = 10, save_every_epochs = 1, save_path = 'saved models/#2FgS6_transformer')
 
 #plot loss history
 def plot_loss_history(loss_history):

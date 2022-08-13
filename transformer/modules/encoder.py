@@ -23,7 +23,7 @@ class Encoder:
         # batchsize, seq_length = src.shape
         # positions = np.tile(np.arange(0, seq_length), (batchsize, 1))
         # src = self.dropout.forward((self.token_embedding.forward(src) * self.scale + self.position_embedding.forward(positions)))
-        src = self.token_embedding.forward(src)
+        src = self.token_embedding.forward(src) * self.scale
         src = self.position_embedding.forward(src)
         src = self.dropout.forward(src)
 
@@ -38,7 +38,7 @@ class Encoder:
             error = layer.backward(error)
         
         error = self.dropout.backward(error)
-        error = self.position_embedding.backward(error)
+        error = self.position_embedding.backward(error) * self.scale
         error = self.token_embedding.backward(error)
         pass
 

@@ -29,7 +29,7 @@ class Decoder:
         batchsize, seq_length = trg.shape
         # positions = np.tile(np.arange(0, seq_length), (batchsize, 1))
         # trg = self.dropout.forward((self.token_embedding.forward(trg) * self.scale + self.position_embedding.forward(positions)))
-        trg = self.token_embedding.forward(trg)
+        trg = self.token_embedding.forward(trg) * self.scale
         trg = self.position_embedding.forward(trg)
         trg = self.dropout.forward(trg)
         # print(f"{trg.shape=}, {trg_mask.shape=}, {src.shape=}, {src_mask.shape=}")
@@ -57,7 +57,7 @@ class Decoder:
 
         error = self.dropout.backward(error)
 
-        error = self.position_embedding.backward(error)
+        error = self.position_embedding.backward(error) * self.scale
         error = self.token_embedding.backward(error)
 
     def set_optimizer(self, optimizer):

@@ -114,7 +114,7 @@ class MultiHeadAttention:
         Q_error = np.matmul(error, self.K)
         # K_error = np.matmul(error.transpose(0, 1, 3, 2), self.Q)
         K_error = np.matmul(self.Q.transpose(0, 1, 3, 2), error) #alter
-        # K_error = K_error.transpose(0, 1, 3, 2)
+        K_error = K_error.transpose(0, 1, 3, 2)
 
         
         # V_error = V_error.reshape(V_error.shape[0], self.value_len, self.d_model)

@@ -44,7 +44,10 @@ class Dense():
 
         # self.w = np.random.normal(0, pow(self.input_size, -0.5), (self.input_size, self.units_num))
         #xavier initialization
-        stdv = 1. / np.sqrt(self.units_num)# * 0.5 #input size
+        stdv = 1. / np.sqrt(self.input_size)# * 0.5 #input size
+        # stdv = np.sqrt(6) / np.sqrt(self.input_size + self.units_num)
+        #kaiming initialization
+        # stdv = np.sqrt(2 / self.input_size)
         self.w = np.random.uniform(-stdv, stdv, (self.input_size, self.units_num))
         # if self.use_bias == True:
         #     self.b = np.random.uniform(-stdv, stdv, self.units_num)
