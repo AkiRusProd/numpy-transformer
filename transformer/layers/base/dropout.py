@@ -1,5 +1,5 @@
 import numpy as np
-# from nnmodel.exceptions.values_checker import ValuesChecker
+
 
 class Dropout():
     """
@@ -12,7 +12,6 @@ class Dropout():
     """
 
     def __init__(self, rate = 0.1) -> None:
-        # self.rate = ValuesChecker.check_float_variable(rate, "rate")
         self.rate = rate
         self.input_shape = None
 

@@ -27,9 +27,12 @@ class EncoderLayer:
 
     def backward(self, error):
         error = self.ff_layer_norm.backward(error)
+
         _error = self.position_wise_feed_forward.backward(self.dropout.backward(error))
         error = self.self_attention_norm.backward(error + _error)
+        
         _error, _error2, _error3 = self.self_attention.backward(self.dropout.backward(error))
+
         return _error +_error2 +_error3 + error
 
     def set_optimizer(self, optimizer):

@@ -1,5 +1,5 @@
 import numpy as np
-# from nnmodel.exceptions.values_checker import ValuesChecker
+
 
 class LayerNormalization():
     """
@@ -12,11 +12,11 @@ class LayerNormalization():
             output: the normalized input data with same shape
     """
 
-    def __init__(self, normalized_shape = None, epsilon = 0.001):#, input_shape = None
+    def __init__(self, normalized_shape = None, epsilon = 0.001):
         
         self.normalized_shape = normalized_shape
         self.normalized_axis = None
-        self.epsilon  = epsilon#ValuesChecker.check_float_variable(epsilon, "epsilon")
+        self.epsilon  = epsilon
 
         self.gamma = None
         self.beta = None
@@ -24,13 +24,9 @@ class LayerNormalization():
         self.mean = None
         self.var = None
 
-        self.moving_mean = None #Not using
-        self.moving_var = None #Not using
-
         self.optimizer = None
 
         self.axis = None
-        # self.input_shape = input_shape#ValuesChecker.check_input_dim(input_shape, input_dim = None)
 
         self.build()
     
@@ -52,10 +48,6 @@ class LayerNormalization():
             self.vb, self.mb         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
             self.vb_hat, self.mb_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
         
-
-        
-
-        # self.output_shape = self.input_shape
 
 
     def forward(self, X):
@@ -124,7 +116,6 @@ class LayerNormalization():
         return output_error
 
     def update_weights(self, layer_num):
-        # print(self.gamma.shape, self.beta.shape, self.grad_gamma.shape, self.grad_beta.shape)
         self.gamma, self.vg, self.mg, self.vg_hat, self.mg_hat  = self.optimizer.update(self.grad_gamma, self.gamma, self.vg, self.mg, self.vg_hat, self.mg_hat, layer_num)
         self.beta, self.vb, self.mb, self.vb_hat, self.mb_hat = self.optimizer.update(self.grad_beta, self.beta, self.vb, self.mb, self.vb_hat, self.mb_hat, layer_num)
 

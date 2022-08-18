@@ -24,29 +24,21 @@ class MultiHeadAttention:
 
     def split_heads_forward(self, x):
         batch_size = x.shape[0]
-        seq_len = x.shape[1]
-        depth = x.shape[2]
 
         return x.reshape(batch_size, -1, self.heads_num, self.d_k).transpose(0, 2, 1, 3)
 
     def split_heads_backward(self, x):
         batch_size = x.shape[0]
-        seq_len = x.shape[1]
-        depth = x.shape[2]
         #x.transpose(0, 2, 1, 3).reshape(batch_size, self.key_len, self.d_model)
         return x.transpose(0, 2, 1, 3).reshape(batch_size, -1, self.heads_num * self.d_k)
 
     def group_heads_forward(self, x):
         batch_size = x.shape[0]
-        seq_len = x.shape[1]
-        depth = x.shape[2]
 
         return x.transpose(0, 2, 1, 3).reshape(batch_size, -1, self.heads_num * self.d_k)
 
     def group_heads_backward(self, x):
         batch_size = x.shape[0]
-        seq_len = x.shape[1]
-        depth = x.shape[2]
 
         return x.reshape(batch_size, -1, self.heads_num, self.d_k).transpose(0, 2, 1, 3)
         

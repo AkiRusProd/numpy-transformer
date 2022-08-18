@@ -70,10 +70,8 @@ class Dense():
         return self.output_data
 
     def backward(self, error):
-        
         self.grad_w = np.sum(np.matmul(self.input_data.transpose(0, 2, 1), error), axis = 0)
         self.grad_b = np.sum(error, axis = (0, 1))
-
 
         output_error = np.dot(error, self.w.T)
 

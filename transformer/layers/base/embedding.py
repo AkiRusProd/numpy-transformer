@@ -1,5 +1,5 @@
 import numpy as np
-# from nnmodel.exceptions.values_checker import ValuesChecker
+
 
 class Embedding():
     """
@@ -15,9 +15,9 @@ class Embedding():
     """
 
     def __init__(self, input_dim, output_dim, input_length = None):
-        self.input_dim = input_dim#ValuesChecker.check_integer_variable(input_dim, "input_dim")
-        self.output_dim   = output_dim# ValuesChecker.check_integer_variable(output_dim, "output_dim")
-        self.input_length =  input_length#ValuesChecker.check_integer_variable(input_length, "input_length")
+        self.input_dim = input_dim
+        self.output_dim   = output_dim
+        self.input_length =  input_length
 
         self.w = None
 
@@ -59,7 +59,6 @@ class Embedding():
 
 
     def forward(self, X):
-        # print(X)
         self.input_data = X # (batch_size, input_length); inputs: values of vocabulary from 0 to input_dim - 1
         
         if not all([np.array_equal(len(self.input_data[0]), len(arr)) for arr in self.input_data]):

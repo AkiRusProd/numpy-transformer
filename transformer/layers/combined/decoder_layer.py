@@ -31,17 +31,16 @@ class DecoderLayer():
         return trg, attention
 
     def backward(self, error):
-        # print(error.shape)
         error = self.ff_layer_norm.backward(error)
-        # print(error.shape)
+
         _error = self.position_wise_feed_forward.backward(self.dropout.backward(error))
-        # print(_error.shape)
         error = self.enc_attn_layer_norm.backward(error + _error)
-        # print(error.shape)
+
         _error, enc_error1, enc_error2 = self.encoder_attention.backward(self.dropout.backward(error))
-        # print("mhead", _error.shape)
         error = self.self_attention_norm.backward(error + _error)
+
         _error, _error2, _error3 = self.self_attention.backward(self.dropout.backward(error))
+        
         return _error +_error2 + _error3 + error, enc_error1 + enc_error2
 
     def set_optimizer(self, optimizer):

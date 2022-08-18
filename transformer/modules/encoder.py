@@ -6,11 +6,11 @@ from transformer.layers.combined.positional_encoding import PositionalEncoding
 
 
 class Encoder:
-    def __init__(self, src_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000):#5000
+    def __init__(self, src_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000):
         # super(Encoder, self).__init__()
 
         self.token_embedding    = Embedding(src_vocab_size, d_model)
-        self.position_embedding = PositionalEncoding(max_length, d_model, dropout) #pos embeding
+        self.position_embedding = PositionalEncoding(max_length, d_model, dropout)
 
         self.layers = []
         for _ in range(layers_num):

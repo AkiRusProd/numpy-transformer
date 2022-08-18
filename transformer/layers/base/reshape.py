@@ -1,5 +1,4 @@
 import numpy as np
-# from nnmodel.exceptions.values_checker import ValuesChecker
 
 class Reshape():
     """
@@ -13,7 +12,7 @@ class Reshape():
     """
 
     def __init__(self, shape) -> None:
-        self.shape = shape#ValuesChecker.check_shape(shape)
+        self.shape = shape
         self.input_shape = None
 
     def build(self):

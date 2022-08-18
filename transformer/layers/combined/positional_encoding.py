@@ -36,7 +36,6 @@ class PositionalEncoding():
     def backward(self, error):
         """ error: (batch_size, seq_len, d_model)
         """
-        # error = self.dropout.backward(error)
 
         return error
 

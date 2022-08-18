@@ -7,7 +7,7 @@ class PositionwiseFeedforward():
     def __init__(self, d_model = 512, d_ff = 2048,  dropout = 0.1):
         
         self.fc_1 = Dense(inputs_num = d_model, units_num = d_ff)
-        self.activation = ReLU()#Activation(ReLU())
+        self.activation = ReLU()
         self.fc_2 = Dense(inputs_num = d_ff, units_num = d_model)
 
         self.dropout = Dropout(dropout)

@@ -7,11 +7,11 @@ from transformer.activations import Identity, Softmax
 from transformer.layers.combined.positional_encoding import PositionalEncoding
 
 class Decoder:
-    def __init__(self, trg_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000):#5000
+    def __init__(self, trg_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000):
         # super(Decoder, self).__init__()
 
         self.token_embedding    = Embedding(trg_vocab_size, d_model)
-        self.position_embedding = PositionalEncoding(max_length, d_model, dropout) #pos embeding
+        self.position_embedding = PositionalEncoding(max_length, d_model, dropout)
 
         self.layers = []
         for _ in range(layers_num):
@@ -31,10 +31,10 @@ class Decoder:
         trg = self.token_embedding.forward(trg) * self.scale
         trg = self.position_embedding.forward(trg)
         trg = self.dropout.forward(trg)
-        # print(f"{trg.shape=}, {trg_mask.shape=}, {src.shape=}, {src_mask.shape=}")
+       
         for layer in self.layers:
             trg, attention = layer.forward(trg, trg_mask, src, src_mask)
-        # print(trg.shape)
+        
         output = self.fc_out.forward(trg)
         
         activated_output = self.activation.forward(output)
