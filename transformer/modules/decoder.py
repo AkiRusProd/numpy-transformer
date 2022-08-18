@@ -1,5 +1,4 @@
 import numpy as np
-from transformer.layers.base.activation import Activation
 from transformer.layers.base.dense import Dense
 from transformer.layers.base.embedding import Embedding
 from transformer.layers.base.dropout import Dropout
@@ -18,11 +17,11 @@ class Decoder:
         for _ in range(layers_num):
             self.layers.append(DecoderLayer(d_model, heads_num, d_ff, dropout))
 
-        self.fc_out = Dense(input_shape = d_model, units_num = trg_vocab_size)
+        self.fc_out = Dense(inputs_num = d_model, units_num = trg_vocab_size)
         self.dropout = Dropout(dropout)
         self.scale = np.sqrt(d_model)
 
-        self.activation = Activation(Identity())
+        self.activation = Identity()#Activation(Identity())
 
 
     def forward(self, trg, trg_mask, src, src_mask):

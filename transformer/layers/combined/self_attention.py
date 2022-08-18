@@ -1,8 +1,7 @@
 import numpy as np
 from transformer.layers.base.dense import Dense
-from transformer.layers.base.activation import Activation
 from transformer.layers.base.dropout import Dropout
-from transformer.activations import Softmax
+from transformer.activations import Sigmoid, Softmax
 
 
 class MultiHeadAttention:
@@ -14,12 +13,12 @@ class MultiHeadAttention:
 
         self.d_k, self.d_q, self.d_v = self.d_model // heads_num, self.d_model // heads_num, self.d_model // heads_num #512 / 8 = 64
         
-        self.K_linear = Dense(input_shape = self.d_model, units_num = self.d_k * heads_num, use_bias = False) # self.W_K = np.random.randn(self.d_model, self.d_k)
-        self.Q_linear = Dense(input_shape = self.d_model, units_num = self.d_q * heads_num, use_bias = False) # self.W_Q = np.random.randn(self.d_model, self.d_q)
-        self.V_linear = Dense(input_shape = self.d_model, units_num = self.d_v * heads_num, use_bias = False) # self.W_V = np.random.randn(self.d_model, self.d_v)
-        self.O_linear = Dense(input_shape = self.d_model, units_num = self.d_v * heads_num) # self.W_O = np.random.randn(self.d_model, self.heads_num * self.d_v)
+        self.K_linear = Dense(inputs_num = self.d_model, units_num = self.d_k * heads_num, use_bias = False) # self.W_K = np.random.randn(self.d_model, self.d_k)
+        self.Q_linear = Dense(inputs_num = self.d_model, units_num = self.d_q * heads_num, use_bias = False) # self.W_Q = np.random.randn(self.d_model, self.d_q)
+        self.V_linear = Dense(inputs_num = self.d_model, units_num = self.d_v * heads_num, use_bias = False) # self.W_V = np.random.randn(self.d_model, self.d_v)
+        self.O_linear = Dense(inputs_num = self.d_model, units_num = self.d_v * heads_num) # self.W_O = np.random.randn(self.d_model, self.heads_num * self.d_v)
 
-        self.activation = Activation(Softmax())
+        self.activation = Softmax()
 
         self.dropout = Dropout(dropout)
 

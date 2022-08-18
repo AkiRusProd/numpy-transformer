@@ -9,24 +9,16 @@ class Dense():
     ---------------
         Args:
             `units_num` (int): number of neurons in the layer
-            `activation` (str) or (`ActivationFunction` class): activation function
             `use_bias` (bool):  `True` if used. `False` if not used
         Returns:
             output: data with shape (batch_size, units_num)
     """
 
-    def __init__(self, units_num, activation = Identity(), input_shape = None, use_bias = True):
-        # self.units_num   = ValuesChecker.check_integer_variable(units_num, "units_num")
-        # self.input_shape = ValuesChecker.check_input_dim(input_shape, input_dim = 2)
-        # self.activation  = ValuesChecker.check_activation(activation, activations)
-        # self.use_bias    = ValuesChecker.check_boolean_type(use_bias, "use_bias")
+    def __init__(self, units_num, inputs_num = None, use_bias = True):
 
         self.units_num   = units_num
-        self.input_shape = input_shape
-        self.activation  = activation
+        self.inputs_num = inputs_num
         self.use_bias    = use_bias
-
-
         
         self.w = None
         self.b = None
@@ -39,16 +31,14 @@ class Dense():
         self.optimizer = optimizer
 
     def build(self):
-        
-        self.input_size = self.input_shape#[-1]
 
         # self.w = np.random.normal(0, pow(self.input_size, -0.5), (self.input_size, self.units_num))
         #xavier initialization
-        stdv = 1. / np.sqrt(self.input_size)# * 0.5 #input size
+        stdv = 1. / np.sqrt(self.inputs_num)# * 0.5 #input size
         # stdv = np.sqrt(6) / np.sqrt(self.input_size + self.units_num)
         #kaiming initialization
         # stdv = np.sqrt(2 / self.input_size)
-        self.w = np.random.uniform(-stdv, stdv, (self.input_size, self.units_num))
+        self.w = np.random.uniform(-stdv, stdv, (self.inputs_num, self.units_num))
         # if self.use_bias == True:
         #     self.b = np.random.uniform(-stdv, stdv, self.units_num)
         # else:
@@ -77,10 +67,9 @@ class Dense():
 
         self.output_data = np.dot(self.input_data, self.w) + self.b
         
-        return self.activation.function(self.output_data)
+        return self.output_data
 
     def backward(self, error):
-        error *= self.activation.derivative(self.output_data)
         
         self.grad_w = np.sum(np.matmul(self.input_data.transpose(0, 2, 1), error), axis = 0)
         self.grad_b = np.sum(error, axis = (0, 1))

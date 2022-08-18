@@ -9,8 +9,8 @@ class MSE():
         return np.power(t - y, 2)
 
     def derivative(self, y, t):
-
-        return -(t - y)
+        
+        return -2 * (t - y) / np.prod(y.shape[1:])
 
 
 class BinaryCrossEntropy():
@@ -45,7 +45,7 @@ class CrossEntropy():
         # self.af = ReLU()
 
     def loss(self, y, t):
-        log_softmax = self.log_softmax.function(y) #np.log(self.softmax.function(y))
+        log_softmax = self.log_softmax.forward(y) #np.log(self.softmax.function(y))
         nll_loss = -log_softmax[np.arange(len(t)), t]
         
         return np.where(t == self.ignore_index, 0, nll_loss)
@@ -55,7 +55,7 @@ class CrossEntropy():
         err = 1/batch_size
         nll_loss_der = -1 * np.where(np.isin(y, y[np.arange(len(t)), t]), err, 0)
        
-        output_err = self.log_softmax.jacobian_derivative(y, nll_loss_der)
+        output_err = self.log_softmax.jacobian_backward(nll_loss_der)
         
         return np.where(t.reshape(-1, 1) == self.ignore_index, 0, output_err)
 

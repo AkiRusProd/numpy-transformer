@@ -8,239 +8,218 @@ References:
 """
 
 
+class Activation(object):
+
+    def forward(self, x):
+        pass
+
+    def backward(self, grad):
+        pass
 
 
-class Sigmoid():
+class Sigmoid(Activation):
 
-    def function(self, x):
+    def forward(self, x):
+        self.x = x
 
         return 1 / (1 + np.exp(-x))
 
-    def derivative(self, x):
-        f_x = self.function(x)
+    def backward(self, grad):
+        f_x = self.forward(self.x)
 
-        return f_x * (1.0 - f_x)
+        return grad * f_x * (1.0 - f_x)
 
 
-class Tanh():
+class Tanh(Activation):
 
-    def function(self, x):
+    def forward(self, x):
+        self.x = x
 
         return np.tanh(x)
 
-    def derivative(self, x):
+    def backward(self, grad):
+        x = self.x
+        return grad * (1.0 - np.power(self.forward(x), 2))
 
-        return 1.0 - np.power(self.function(x), 2)
 
+class Softmax(Activation):
+    def __init__(self) -> None:
+        self.axis = -1
 
-class Softmax():
-    def __init__(self, axis = -1) -> None:
-        self.axis = axis
-
-    def function(self, x):
+    def forward(self, x):
+        self.x = x
         e_x = np.exp(x - np.max(x, axis = self.axis, keepdims=True))
         
         self.softmax =  e_x / np.sum(e_x, axis = self.axis, keepdims=True)
         return self.softmax
 
-    def derivative(self, x):# i=j
-        f_x = self.function(x)
+    # def backward(self, x, grad):# i=j
+    #     f_x = self.forward(x)
         
-        return f_x * (1.0 - f_x)
+    #     return grad * f_x * (1.0 - f_x)
+   
 
-    
-    def jacobian_derivative(self, x, grad = None):
-        batch_size = x.shape[0]
-        softmax = self.function(x)
+    def backward(self, grad = None):
+        #https://e2eml.school/softmax.html
+        #https://suzyahyah.github.io/calculus/machine%20learning/2018/04/04/Jacobian-and-Backpropagation.html
+        #https://sgugger.github.io/a-simple-neural-net-in-numpy.html
+
+        batch_size = self.x.shape[0]
+        softmax = self.forward(self.x)
         
-        J = softmax[:, :, np.newaxis] * np.tile(np.identity(softmax.shape[1]), (softmax.shape[0], 1, 1)) - (softmax[:, np.newaxis, :].transpose(0, 2, 1) @ softmax[:, np.newaxis, :]) #OK FOR DIM = -1 (D, N)
-        # J = softmax[:, :, np.newaxis] * np.tile(np.identity(softmax.shape[1]), (softmax.shape[0], 1, 1)) - np.einsum('ij, ik -> ijk', softmax, softmax) #np.matmul(softmax[:, :, None], softmax[:, None, :])
-        input_grad =  grad[:, np.newaxis, :] @ J
+        J = softmax[..., np.newaxis] * np.tile(np.identity(softmax.shape[-1]), (softmax.shape[0], *np.ones(softmax.ndim, dtype = np.int8))) - (softmax[..., np.newaxis, :].transpose(*np.arange(0, softmax.ndim - 1, 1, dtype=np.int8), -1, -2) @ softmax[..., np.newaxis, :]) #np.matmul(softmax[:, :, None], softmax[:, None, :])
+        input_grad =  grad[..., np.newaxis, :] @ J
         
-        return input_grad.reshape(x.shape) / batch_size
-    # def derivative2(self, x, grad = None): #неправильно отсносительно моей реализации/ х и есть инпут
-    #     #https://e2eml.school/softmax.html
-    #     softmax = self.function(x).reshape(1, -1)
-    #     grad = grad.reshape(1, -1)
-    #     d_softmax = (softmax * np.identity(softmax.size)   #Jacobian matrix                      
-    #                 - softmax.transpose() @ softmax)
-    #     #https://suzyahyah.github.io/calculus/machine%20learning/2018/04/04/Jacobian-and-Backpropagation.html
-    #     input_grad = grad @ d_softmax
-    #     print(d_softmax)
-
-    #     return input_grad.reshape(x.shape)
-
-    # def derivative3(self, x, grad = None):
-    #     softmax = self.function(x)
-    #     s = softmax.reshape(-1,1)
-    #     # print(np.diagflat(s) - np.dot(s, s.T))
-    #     return  (grad.reshape(1, -1) @ (np.diagflat(s) - np.dot(s, s.T))).reshape(x.shape)
+        return input_grad.reshape(self.x.shape) / batch_size
 
 
-    # def derivative5(self, x, grad = None):
-    #     '''Returns the jacobian of the Softmax function for the given set of inputs.
-    #     Inputs:
-    #     x: should be a 2d array where the rows correspond to the samples
-    #         and the columns correspond to the nodes.
-    #     Returns: jacobian
-    #     '''
-    #     s = self.function(x)
-    #     a = np.eye(s.shape[-1])
-    #     temp1 = np.zeros((s.shape[0], s.shape[1], s.shape[1]),dtype=np.float32)
-    #     temp2 = np.zeros((s.shape[0], s.shape[1], s.shape[1]),dtype=np.float32)
-    #     temp1 = np.einsum('ij,jk->ijk',s,a)
-    #     temp2 = np.einsum('ij,ik->ijk',s,s)
+class LogSoftmax(Activation):
+    def __init__(self) -> None:
+        self.axis = -1
 
-    #     J = temp1 - temp2
-    #     # print(J.shape, grad[:, np.newaxis, :].shape)
-    #     return grad[:, np.newaxis, :] @ J
-
-    # def derivative(self, grad):  i!=j
-    #     #https://sgugger.github.io/a-simple-neural-net-in-numpy.html
-    #     return self.softmax * (grad -(grad * self.softmax).sum(axis=1)[:,None])
-
-class LogSoftmax():
-    def __init__(self, axis = -1) -> None:
-        self.axis = axis
-
-    def softmax_function(self, x):
+    def softmax_forward(self, x):
         e_x = np.exp(x - np.max(x, axis = self.axis, keepdims=True))
         
         self.softmax =  e_x / np.sum(e_x, axis = self.axis, keepdims=True)
         return self.softmax
 
-    def function(self, x):
-        self.log_softmax = np.log(self.softmax_function(x))
+    def forward(self, x):
+        self.x = x
+        self.log_softmax = np.log(self.softmax_forward(x))
         return self.log_softmax
 
-    # def derivative(self, x):# for i==j
-    #     f_x = self.function(x)
+    # def backward(self, x):# for i==j
+    #     f_x = self.forward(x)
         
     #     return (1.0 - f_x)
 
-    def jacobian_derivative(self, x, grad = None): #input (N, D)
-        batch_size = x.shape[0]
-        softmax = self.softmax_function(x)
+    def jacobian_backward(self, grad = None):
+        batch_size = self.x.shape[0]
+        softmax = self.softmax_forward(self.x)
 
-        J = np.tile(np.identity(softmax.shape[1]), (softmax.shape[0], 1, 1)) - (np.ones((x.shape[0], x.shape[1], 1)) @ softmax[:, np.newaxis, :])
+        J = np.tile(np.identity(softmax.shape[-1]), (softmax.shape[0], *np.ones(softmax.ndim, dtype = np.int8))) - (np.ones((*self.x.shape, 1)) @ softmax[..., np.newaxis, :])
         
-        input_grad =  grad[:, np.newaxis, :] @ J
+        input_grad =  grad[..., np.newaxis, :] @ J
         
-        return input_grad.reshape(x.shape) / batch_size
+        return input_grad.reshape(self.x.shape) / batch_size
 
 
-class Softplus():
+class Softplus(Activation):
 
-    def function(self, x):
-        
+    def forward(self, x):
+        self.x = x
         return np.log(1 + np.exp(x))
 
-    def derivative(self, x):
-        
-        return 1 / (1 + np.exp(-x))
+    def backward(self, grad):
+        x = self.x
+        return grad * 1 / (1 + np.exp(-x))
 
-class Softsign():
+class Softsign(Activation):
 
-    def function(self, x):
-        
+    def forward(self, x):
+        self.x = x
         return x / (1 + np.abs(x))
 
-    def derivative(self, x):
+    def backward(self, grad):
+        x = self.x
+        return grad * 1 / np.power(1 + np.abs(x), 2)
 
-        return 1 / np.power(1 + np.abs(x), 2)
-
-class Swish():
+class Swish(Activation):
 
     def __init__(self, beta = 1):
         self.beta = beta
 
-    def function(self, x):
+    def forward(self, x):
+        self.x = x
         self.sigmoid = lambda z: 1 / (1 + np.exp(-z)) 
 
         return x * self.sigmoid(self.beta * x)
 
-    def derivative(self, x):
-        f_x = self.function(x)
+    def backward(self, grad):
+        f_x = self.forward(self.x)
 
-        return self.beta * f_x + self.sigmoid(self.beta * x) * (1 - self.beta * f_x)
+        return grad * (self.beta * f_x + self.sigmoid(self.beta * self.x) * (1 - self.beta * f_x))
 
-class Mish():
+class Mish(Activation):
 
-    def function(self, x):
-
+    def forward(self, x):
+        self.x = x
         return x * np.tanh(np.log(1 + np.exp(x)))
 
-    def derivative(self, x):
-        
-        return np.exp(x) * (4 * (x + 1) + 4 * np.exp(2 * x) + np.exp(3 * x) + np.exp(x) * (4 * x + 6)) / np.power((2 * np.exp(x) + np.exp(2 * x) + 2), 2)
+    def backward(self, grad):
+        x = self.x
+        return grad * (np.exp(x) * (4 * (x + 1) + 4 * np.exp(2 * x) + np.exp(3 * x) + np.exp(x) * (4 * x + 6)) / np.power((2 * np.exp(x) + np.exp(2 * x) + 2), 2))
 
-class TanhExp():
+class TanhExp(Activation):
 
-    def function(self, x):
+    def forward(self, x):
+        self.x = x
 
         return x * np.tanh(np.exp(x))
 
-    def derivative(self, x):
+    def backward(self, grad):
+        x = self.x
+        return grad * (np.tanh(np.exp(x)) - x * np.exp(x) * (np.power(np.tanh(np.exp(x)), 2) - 1))
 
-        return np.tanh(np.exp(x)) - x * np.exp(x) * (np.power(np.tanh(np.exp(x)), 2) - 1)
 
+class ReLU(Activation):
 
-class ReLU():
-
-    def function(self, x):
-
+    def forward(self, x):
+        self.x = x
         return np.maximum(0, x)
 
-    def derivative(self, x):
+    def backward(self, grad):
+        x = self.x
+        return grad * np.where(x <= 0, 0, 1)
 
-        return np.where(x <= 0, 0, 1)
 
-
-class LeakyReLU():
+class LeakyReLU(Activation):
 
     def __init__(self, alpha = 0.01):
         self.alpha = alpha
 
-    def function(self, x):
-
+    def forward(self, x):
+        self.x = x
         return np.where(x <= 0, self.alpha * x, x)
 
-    def derivative(self, x):
+    def backward(self, grad):
+        x = self.x
+        return grad * np.where(x <= 0, self.alpha, 1)
 
-        return np.where(x <= 0, self.alpha, 1)
 
-
-class ELU():
+class ELU(Activation):
 
     def __init__(self, alpha = 0.1):
         self.alpha = alpha 
 
-    def function(self, x):
-
+    def forward(self, x):
+        self.x = x
         return np.where(x <= 0, self.alpha * (np.exp(x) - 1), x)
 
-    def derivative(self, x):
+    def backward(self, grad):
+        x = self.x
+        return grad * np.where(x <= 0, self.alpha + self.forward(x), 1)
 
-        return np.where(x <= 0, self.alpha + self.function(x), 1)
 
-
-class SELU():
+class SELU(Activation):
 
     def __init__(self):
         self.alpha = 1.6732632423543772848170429916717
         self.lmbda = 1.0507009873554804934193349852946 
 
-    def function(self, x):
+    def forward(self, x):
+        self.x = x
         return self.lmbda * np.where(x > 0, x, self.alpha*(np.exp(x)-1))
 
-    def derivative(self, x):
-        return self.lmbda * np.where(x > 0, 1, self.alpha * np.exp(x))
+    def backward(self, grad):
+        x = self.x
+        return grad * self.lmbda * np.where(x > 0, 1, self.alpha * np.exp(x))
 
 
-class GELU():
+class GELU(Activation):
 
-    def function(self, x):
-
+    def forward(self, x):
+        self.x = x
         return (
                 0.5
                 * x
@@ -252,25 +231,26 @@ class GELU():
                 )
             )
 
-    def derivative(self, x):
+    def backward(self, grad):
+        x = self.x
         sech = lambda z: 2 / (np.exp(z) + np.exp(-z))
 
-        return (
+        return grad *(
             0.5 * np.tanh(0.0356774 * np.power(x, 3) + 0.797885 * x)
             + (0.0535161 * np.power(x, 3) + 0.398942 * x)
             * np.power(sech(0.0356774 * np.power(x, 3) + 0.797885 * x), 2)
             + 0.5
         )
 
-class Identity():
+class Identity(Activation):
 
-    def function(self, x):
+    def forward(self, x):
+        self.x = x
+        return x
 
-            return x
-
-    def derivative(self, x):
-
-            return np.ones(x.shape)
+    def backward(self, grad):
+        x = self.x
+        return grad * np.ones(x.shape)
 
     
 activations= {

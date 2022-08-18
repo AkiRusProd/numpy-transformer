@@ -84,9 +84,9 @@ mse_loss = MSE()
 mse_loss_output = mse_loss.loss(activation_output, target)
 print("mse_loss_output\n", mse_loss_output.mean())
 mse_loss_derivative = mse_loss.derivative(activation_output, target)
-print("mse_loss_derivative\n", mse_loss_derivative *2/3)
+print("mse_loss_derivative\n", mse_loss_derivative)
 # activation_output_derivative = activation.derivative(input) * mse_loss_derivative *2/3
-activation_output_derivative = activation.jacobian_derivative(input, mse_loss_derivative *2/3) #1D OK
+activation_output_derivative = activation.jacobian_derivative(input, mse_loss_derivative) #1D OK
 print("activation_output_derivative\n", activation_output_derivative)
 
 
