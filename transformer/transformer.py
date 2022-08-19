@@ -8,7 +8,7 @@ import pickle as pkl
 from tqdm import tqdm
 from transformer.modules import Encoder
 from transformer.modules import Decoder
-from transformer.optimizers import Adam, Nadam, Momentum, RMSProp, SGD
+from transformer.optimizers import Adam, Nadam, Momentum, RMSProp, SGD, Noam
 from transformer.losses import CategoricalCrossEntropy, BinaryCrossEntropy, MSE, CrossEntropy, TorchCrossEntropy
 import matplotlib.pyplot as plt
 
@@ -342,7 +342,16 @@ def data_gen(V, batch, nbatches):
 
 # source, target = data_gen(10, 2, 1)
 
-model.compile(optimizer = Adam(alpha = 0.0005), loss_function = CrossEntropy(ignore_index=PAD_INDEX))#alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9
+# model.compile(optimizer = Adam(alpha = 0.0005), loss_function = CrossEntropy(ignore_index=PAD_INDEX))#alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9
+model.compile(
+                optimizer = Noam(
+                                Adam(alpha = 1e-4, beta = 0.9, beta2 = 0.99, epsilon = 1e-9), #NOTE: alpha doesnt matter for Noam scheduler
+                                model_dim = HID_DIM,
+                                scale_factor = 2,
+                                warmup_steps = 4000
+                            ), 
+                loss_function = CrossEntropy(ignore_index=PAD_INDEX)
+            )
 loss_history = model.fit([source[10]], [target[10]], epochs = 500, save_every_epochs = 1, save_path = None)
 
 #plot loss history

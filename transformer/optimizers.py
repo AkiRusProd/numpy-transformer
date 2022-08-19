@@ -109,6 +109,29 @@ class Nadam():
 
         return weights, v, m, v_hat, m_hat
 
+class Noam():
+    """Learning rate scheduler for optimizers"""
+
+    def __init__(self, optimizer, model_dim, scale_factor = 1, warmup_steps = 4000) -> None:
+        self.optimizer = optimizer
+        self.model_dim = model_dim
+        self.scale_factor = scale_factor
+        self.warmup_steps = warmup_steps
+        self.steps_num = 0
+
+    def compute_learning_rate(self):
+        return self.scale_factor * (
+            self.model_dim ** (-0.5)
+            * min(self.steps_num ** (-0.5), self.steps_num * self.warmup_steps ** (-1.5))
+        )
+
+    def update(self, gradient, weights, v, m, v_hat, m_hat, t):
+        self.steps_num += 1
+
+        self.optimizer.alpha = self.compute_learning_rate()
+        return self.optimizer.update(gradient, weights, v, m, v_hat, m_hat, t)
+    
+
 
 optimizers = {
     
