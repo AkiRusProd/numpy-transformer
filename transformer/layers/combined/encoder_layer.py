@@ -6,15 +6,15 @@ from transformer.layers.base.layer_norm import LayerNormalization
 
 
 class EncoderLayer:
-    def __init__(self, d_model, heads_num, d_ff, dropout):
+    def __init__(self, d_model, heads_num, d_ff, dropout, data_type):
         super(EncoderLayer, self).__init__()
 
-        self.self_attention_norm = LayerNormalization(d_model, epsilon=1e-6)
-        self.ff_layer_norm = LayerNormalization(d_model, epsilon=1e-6)
-        self.self_attention = MultiHeadAttention(d_model, heads_num, dropout)
+        self.self_attention_norm = LayerNormalization(d_model, epsilon=1e-6, data_type=data_type)
+        self.ff_layer_norm       = LayerNormalization(d_model, epsilon=1e-6, data_type=data_type)
+        self.self_attention = MultiHeadAttention(d_model, heads_num, dropout, data_type)
         self.position_wise_feed_forward = PositionwiseFeedforward(d_model, d_ff, dropout)
 
-        self.dropout = Dropout(dropout)
+        self.dropout = Dropout(dropout, data_type)
 
     def forward(self, src, src_mask):
         _src, _ = self.self_attention.forward(src, src, src, src_mask)

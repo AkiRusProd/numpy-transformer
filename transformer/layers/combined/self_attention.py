@@ -6,17 +6,20 @@ from transformer.activations import Sigmoid, Softmax
 
 class MultiHeadAttention:
     """Multi-HeadAttention"""
-    def __init__(self, d_model = 512, heads_num = 8, dropout = 0.1):
+    def __init__(self, d_model = 512, heads_num = 8, dropout = 0.1, data_type = None):
         self.d_model = d_model
         self.heads_num = heads_num
         self.dropout = dropout
 
+        self.data_type = data_type
+
         self.d_k, self.d_q, self.d_v = self.d_model // heads_num, self.d_model // heads_num, self.d_model // heads_num #512 / 8 = 64
+        self.scale = np.sqrt(self.d_k).astype(self.data_type)
         
-        self.K_linear = Dense(inputs_num = self.d_model, units_num = self.d_k * heads_num, use_bias = False) # self.W_K = np.random.randn(self.d_model, self.d_k)
-        self.Q_linear = Dense(inputs_num = self.d_model, units_num = self.d_q * heads_num, use_bias = False) # self.W_Q = np.random.randn(self.d_model, self.d_q)
-        self.V_linear = Dense(inputs_num = self.d_model, units_num = self.d_v * heads_num, use_bias = False) # self.W_V = np.random.randn(self.d_model, self.d_v)
-        self.O_linear = Dense(inputs_num = self.d_model, units_num = self.d_v * heads_num) # self.W_O = np.random.randn(self.d_model, self.heads_num * self.d_v)
+        self.K_linear = Dense(inputs_num = self.d_model, units_num = self.d_k * heads_num, use_bias = False, data_type = self.data_type) # self.W_K = np.random.randn(self.d_model, self.d_k)
+        self.Q_linear = Dense(inputs_num = self.d_model, units_num = self.d_q * heads_num, use_bias = False, data_type = self.data_type) # self.W_Q = np.random.randn(self.d_model, self.d_q)
+        self.V_linear = Dense(inputs_num = self.d_model, units_num = self.d_v * heads_num, use_bias = False, data_type = self.data_type) # self.W_V = np.random.randn(self.d_model, self.d_v)
+        self.O_linear = Dense(inputs_num = self.d_model, units_num = self.d_v * heads_num, use_bias = True , data_type = self.data_type) # self.W_O = np.random.randn(self.d_model, self.heads_num * self.d_v)
 
         self.activation = Softmax()
 
@@ -66,7 +69,7 @@ class MultiHeadAttention:
         self.V = self.split_heads_forward(V)
 
         # print(Q.shape, K.shape)
-        energy = np.matmul(self.Q, self.K.transpose(0, 1, 3, 2)) / np.sqrt(self.d_k)
+        energy = np.matmul(self.Q, self.K.transpose(0, 1, 3, 2)) / self.scale
 
         self.mask = mask
         if self.mask is not None:
@@ -100,7 +103,7 @@ class MultiHeadAttention:
         if self.mask is not None:
             error = np.where(self.mask == 0, 0, error)
 
-        error /= np.sqrt(self.d_k)
+        error /= self.scale
 
         Q_error = np.matmul(error, self.K)
         # K_error = np.matmul(error.transpose(0, 1, 3, 2), self.Q)

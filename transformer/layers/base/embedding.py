@@ -14,7 +14,7 @@ class Embedding():
             output: data with shape (batch_size, input_length, output_dim)
     """
 
-    def __init__(self, input_dim, output_dim, input_length = None):
+    def __init__(self, input_dim, output_dim, input_length = None, data_type = np.float32):
         self.input_dim = input_dim
         self.output_dim   = output_dim
         self.input_length =  input_length
@@ -22,6 +22,7 @@ class Embedding():
         self.w = None
 
         self.optimizer = None
+        self.data_type = data_type
 
         self.build()
 
@@ -30,10 +31,10 @@ class Embedding():
 
     def build(self):
         
-        self.w = np.random.normal(0, pow(self.input_dim, -0.5), (self.input_dim, self.output_dim))
+        self.w = np.random.normal(0, pow(self.input_dim, -0.5), (self.input_dim, self.output_dim)).astype(self.data_type)
 
-        self.v, self.m         = np.zeros_like(self.w), np.zeros_like(self.w)
-        self.v_hat, self.m_hat = np.zeros_like(self.w), np.zeros_like(self.w)
+        self.v, self.m         = np.zeros_like(self.w).astype(self.data_type), np.zeros_like(self.w).astype(self.data_type)
+        self.v_hat, self.m_hat = np.zeros_like(self.w).astype(self.data_type), np.zeros_like(self.w).astype(self.data_type)
 
         # if self.input_length is not None:
         #     self.output_shape = (self.input_length, self.output_dim)
@@ -55,7 +56,7 @@ class Embedding():
                 prepared_batch_labels.append(labels_list)
 
         
-        return np.asarray(prepared_batch_labels).reshape(self.batch_size, self.current_input_length, self.input_dim)
+        return np.asarray(prepared_batch_labels).reshape(self.batch_size, self.current_input_length, self.input_dim).astype(self.data_type) 
 
 
     def forward(self, X):

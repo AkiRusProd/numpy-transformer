@@ -1,7 +1,6 @@
 import numpy as np
 from transformer.activations import  *
-# from transformer.layers.base.activation import Act
-# from nnmodel.exceptions.values_checker import ValuesChecker
+
 
 class Dense():
     """
@@ -14,7 +13,7 @@ class Dense():
             output: data with shape (batch_size, units_num)
     """
 
-    def __init__(self, units_num, inputs_num = None, use_bias = True):
+    def __init__(self, units_num, inputs_num = None, use_bias = True, data_type = np.float32):
 
         self.units_num   = units_num
         self.inputs_num = inputs_num
@@ -24,6 +23,7 @@ class Dense():
         self.b = None
 
         self.optimizer = None
+        self.data_type = data_type
 
         self.build()
 
@@ -38,23 +38,23 @@ class Dense():
         # stdv = np.sqrt(6) / np.sqrt(self.input_size + self.units_num)
         #kaiming initialization
         # stdv = np.sqrt(2 / self.input_size)
-        self.w = np.random.uniform(-stdv, stdv, (self.inputs_num, self.units_num))
+        self.w = np.random.uniform(-stdv, stdv, (self.inputs_num, self.units_num)).astype(self.data_type)
         # if self.use_bias == True:
         #     self.b = np.random.uniform(-stdv, stdv, self.units_num)
         # else:
         #     self.b = np.zeros(self.units_num)
-        self.b = np.zeros(self.units_num)
+        self.b = np.zeros(self.units_num).astype(self.data_type)
         
 
         #glorot initialization
         # self.w = np.random.uniform(-np.sqrt(6 / (self.input_size + self.units_num)), np.sqrt(6 / (self.input_size + self.units_num)), (self.input_size, self.units_num))
         
 
-        self.v, self.m         = np.zeros_like(self.w), np.zeros_like(self.w) # optimizers params
-        self.v_hat, self.m_hat = np.zeros_like(self.w), np.zeros_like(self.w) # optimizers params
+        self.v, self.m         = np.zeros_like(self.w).astype(self.data_type), np.zeros_like(self.w).astype(self.data_type) # optimizers params
+        self.v_hat, self.m_hat = np.zeros_like(self.w).astype(self.data_type), np.zeros_like(self.w).astype(self.data_type) # optimizers params
 
-        self.vb, self.mb         = np.zeros_like(self.b), np.zeros_like(self.b) # optimizers params
-        self.vb_hat, self.mb_hat = np.zeros_like(self.b), np.zeros_like(self.b) # optimizers params
+        self.vb, self.mb         = np.zeros_like(self.b).astype(self.data_type), np.zeros_like(self.b).astype(self.data_type) # optimizers params
+        self.vb_hat, self.mb_hat = np.zeros_like(self.b).astype(self.data_type), np.zeros_like(self.b).astype(self.data_type) # optimizers params
 
         self.output_shape = (1, self.units_num)
 

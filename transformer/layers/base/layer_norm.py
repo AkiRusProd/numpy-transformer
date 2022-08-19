@@ -12,7 +12,7 @@ class LayerNormalization():
             output: the normalized input data with same shape
     """
 
-    def __init__(self, normalized_shape = None, epsilon = 0.001):
+    def __init__(self, normalized_shape = None, epsilon = 0.001, data_type = np.float32):
         
         self.normalized_shape = normalized_shape
         self.normalized_axis = None
@@ -25,6 +25,7 @@ class LayerNormalization():
         self.var = None
 
         self.optimizer = None
+        self.data_type = data_type
 
         self.axis = None
 
@@ -38,15 +39,15 @@ class LayerNormalization():
         self.feature_size = None
 
         if self.normalized_shape is not None:
-            self.gamma = np.ones(self.normalized_shape)
-            self.beta = np.zeros(self.normalized_shape)
+            self.gamma = np.ones(self.normalized_shape).astype(self.data_type)
+            self.beta = np.zeros(self.normalized_shape).astype(self.data_type)
 
 
-            self.vg, self.mg         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-            self.vg_hat, self.mg_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+            self.vg, self.mg         = np.zeros_like(self.gamma).astype(self.data_type), np.zeros_like(self.gamma).astype(self.data_type)
+            self.vg_hat, self.mg_hat = np.zeros_like(self.gamma).astype(self.data_type), np.zeros_like(self.gamma).astype(self.data_type)
 
-            self.vb, self.mb         = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
-            self.vb_hat, self.mb_hat = np.zeros_like(self.gamma), np.zeros_like(self.gamma)
+            self.vb, self.mb         = np.zeros_like(self.gamma).astype(self.data_type), np.zeros_like(self.gamma).astype(self.data_type)
+            self.vb_hat, self.mb_hat = np.zeros_like(self.gamma).astype(self.data_type), np.zeros_like(self.gamma).astype(self.data_type)
         
 
 

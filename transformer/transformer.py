@@ -76,6 +76,7 @@ train_data, val_data, test_data = clear_dataset(train_data, val_data, test_data)
 # print(train_data)
 
 # EPOCHS = 1
+DATA_TYPE = np.float32
 BATCH_SIZE = 2
 
 PAD_TOKEN = '<pad>'
@@ -226,6 +227,7 @@ class Transformer():
         return subsequent_mask
 
     def forward(self, src, trg):
+        src, trg = src.astype(DATA_TYPE), trg.astype(DATA_TYPE)
         #src: (batch_size, source_seq_len)
         #tgt: (batch_size, target_seq_len)
 
@@ -265,8 +267,8 @@ class Transformer():
                 _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
                 # print(_output)
                 # print(error)
-                loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].flatten()).mean())#[:, np.newaxis]
-                error = self.loss_function.derivative(_output, target_batch[:, 1:].flatten())#[:, np.newaxis]
+                loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].astype(np.int32).flatten()).mean())#[:, np.newaxis]
+                error = self.loss_function.derivative(_output, target_batch[:, 1:].astype(np.int32).flatten())#[:, np.newaxis]
 
 
                 self.backward(error.reshape(output.shape))
@@ -318,9 +320,11 @@ FF_SIZE = 512#2048
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
+MAX_LEN = 5000
 
-encoder = Encoder(INPUT_DIM, ENC_HEADS, ENC_LAYERS, HID_DIM, FF_SIZE, ENC_DROPOUT)
-decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPOUT)
+
+encoder = Encoder(INPUT_DIM, ENC_HEADS, ENC_LAYERS, HID_DIM, FF_SIZE, ENC_DROPOUT, MAX_LEN, DATA_TYPE)
+decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPOUT, MAX_LEN, DATA_TYPE)
 
 
 

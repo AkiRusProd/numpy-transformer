@@ -53,7 +53,7 @@ class CrossEntropy():
     def derivative(self, y, t):
         batch_size = y.shape[0]
         err = 1/batch_size
-        nll_loss_der = -1 * np.where(np.isin(y, y[np.arange(len(t)), t]), err, 0)
+        nll_loss_der = -1 * np.where(np.isin(y, y[np.arange(len(t)), t]), err, 0).astype(y.dtype)
        
         output_err = self.log_softmax.jacobian_backward(nll_loss_der)
         

@@ -6,13 +6,15 @@ class PositionalEncoding():
     """ Implements the sinusoidal positional encoding.
     """
 
-    def __init__(self,max_len, d_model, dropout_rate=0.1):
+    def __init__(self,max_len, d_model, dropout_rate=0.1, data_type = np.float32):
         super(PositionalEncoding, self).__init__()
         self.d_model = d_model
         self.dropout_rate = dropout_rate
         self.max_len = max_len
 
-        self.dropout = Dropout(dropout_rate)
+        self.data_type = data_type
+
+        # self.dropout = Dropout(dropout_rate)
  
         pe = np.zeros((max_len, d_model))  # (max_len, d_model)
         position = np.arange(0, max_len)[:, np.newaxis]# (max_len, 1)
@@ -21,7 +23,7 @@ class PositionalEncoding():
         pe[:, 0::2] = np.sin(position * div_term)
         pe[:, 1::2] = np.cos(position * div_term)
 
-        self.pe = pe[:, np.newaxis, :]  # (max_len, 1, d_model)
+        self.pe = pe[:, np.newaxis, :].astype(self.data_type)   # (max_len, 1, d_model)
 
 
     def forward(self, x):

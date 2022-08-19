@@ -25,9 +25,10 @@ class Sigmoid(Activation):
         return 1 / (1 + np.exp(-x))
 
     def backward(self, grad):
+        x = self.x
         f_x = self.forward(self.x)
 
-        return grad * f_x * (1.0 - f_x)
+        return grad * (f_x * (1.0 - f_x)).astype(x.dtype)
 
 
 class Tanh(Activation):
@@ -39,7 +40,7 @@ class Tanh(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * (1.0 - np.power(self.forward(x), 2))
+        return grad * (1.0 - np.power(self.forward(x), 2)).astype(x.dtype)
 
 
 class Softmax(Activation):
@@ -67,7 +68,7 @@ class Softmax(Activation):
         batch_size = self.x.shape[0]
         softmax = self.forward(self.x)
         
-        J = softmax[..., np.newaxis] * np.tile(np.identity(softmax.shape[-1]), (softmax.shape[0], *np.ones(softmax.ndim, dtype = np.int8))) - (softmax[..., np.newaxis, :].transpose(*np.arange(0, softmax.ndim - 1, 1, dtype=np.int8), -1, -2) @ softmax[..., np.newaxis, :]) #np.matmul(softmax[:, :, None], softmax[:, None, :])
+        J = softmax[..., np.newaxis] * np.tile(np.identity(softmax.shape[-1], dtype = self.x.dtype), (softmax.shape[0], *np.ones(softmax.ndim, dtype = np.int8))) - (softmax[..., np.newaxis, :].transpose(*np.arange(0, softmax.ndim - 1, 1, dtype=np.int8), -1, -2) @ softmax[..., np.newaxis, :]) #np.matmul(softmax[:, :, None], softmax[:, None, :])
         input_grad =  grad[..., np.newaxis, :] @ J
         
         return input_grad.reshape(self.x.shape) / batch_size
@@ -97,7 +98,7 @@ class LogSoftmax(Activation):
         batch_size = self.x.shape[0]
         softmax = self.softmax_forward(self.x)
 
-        J = np.tile(np.identity(softmax.shape[-1]), (softmax.shape[0], *np.ones(softmax.ndim, dtype = np.int8))) - (np.ones((*self.x.shape, 1)) @ softmax[..., np.newaxis, :])
+        J = np.tile(np.identity(softmax.shape[-1], dtype = self.x.dtype), (softmax.shape[0], *np.ones(softmax.ndim, dtype = np.int8))) - (np.ones((*self.x.shape, 1)).astype(np.float32) @ softmax[..., np.newaxis, :])
         
         input_grad =  grad[..., np.newaxis, :] @ J
         
@@ -122,7 +123,7 @@ class Softsign(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * 1 / np.power(1 + np.abs(x), 2)
+        return grad * 1 / np.power(1 + np.abs(x), 2).astype(x.dtype)
 
 class Swish(Activation):
 
@@ -136,9 +137,10 @@ class Swish(Activation):
         return x * self.sigmoid(self.beta * x)
 
     def backward(self, grad):
+        x = self.x
         f_x = self.forward(self.x)
 
-        return grad * (self.beta * f_x + self.sigmoid(self.beta * self.x) * (1 - self.beta * f_x))
+        return grad * (self.beta * f_x + self.sigmoid(self.beta * x) * (1 - self.beta * f_x)).astype(x.dtype)
 
 class Mish(Activation):
 
@@ -148,7 +150,7 @@ class Mish(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * (np.exp(x) * (4 * (x + 1) + 4 * np.exp(2 * x) + np.exp(3 * x) + np.exp(x) * (4 * x + 6)) / np.power((2 * np.exp(x) + np.exp(2 * x) + 2), 2))
+        return grad * (np.exp(x) * (4 * (x + 1) + 4 * np.exp(2 * x) + np.exp(3 * x) + np.exp(x) * (4 * x + 6)) / np.power((2 * np.exp(x) + np.exp(2 * x) + 2), 2)).astype(x.dtype)
 
 class TanhExp(Activation):
 
@@ -159,7 +161,7 @@ class TanhExp(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * (np.tanh(np.exp(x)) - x * np.exp(x) * (np.power(np.tanh(np.exp(x)), 2) - 1))
+        return grad * (np.tanh(np.exp(x)) - x * np.exp(x) * (np.power(np.tanh(np.exp(x)), 2) - 1)).astype(x.dtype)
 
 
 class ReLU(Activation):
@@ -170,7 +172,7 @@ class ReLU(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * np.where(x <= 0, 0, 1)
+        return grad * np.where(x <= 0, 0, 1).astype(x.dtype)
 
 
 class LeakyReLU(Activation):
@@ -184,7 +186,7 @@ class LeakyReLU(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * np.where(x <= 0, self.alpha, 1)
+        return grad * np.where(x <= 0, self.alpha, 1).astype(x.dtype)
 
 
 class ELU(Activation):
@@ -198,7 +200,7 @@ class ELU(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * np.where(x <= 0, self.alpha + self.forward(x), 1)
+        return grad * np.where(x <= 0, self.alpha + self.forward(x), 1).astype(x.dtype)
 
 
 class SELU(Activation):
@@ -213,7 +215,7 @@ class SELU(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * self.lmbda * np.where(x > 0, 1, self.alpha * np.exp(x))
+        return grad * self.lmbda * np.where(x > 0, 1, self.alpha * np.exp(x)).astype(x.dtype)
 
 
 class GELU(Activation):
@@ -240,7 +242,7 @@ class GELU(Activation):
             + (0.0535161 * np.power(x, 3) + 0.398942 * x)
             * np.power(sech(0.0356774 * np.power(x, 3) + 0.797885 * x), 2)
             + 0.5
-        )
+        ).astype(x.dtype)
 
 class Identity(Activation):
 
@@ -250,7 +252,7 @@ class Identity(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * np.ones(x.shape)
+        return grad * np.ones(x.shape).astype(x.dtype)
 
     
 activations= {

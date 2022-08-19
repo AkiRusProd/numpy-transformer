@@ -5,17 +5,17 @@ from transformer.layers.combined.positionwise_feed_forward import PositionwiseFe
 from transformer.layers.base.layer_norm import LayerNormalization
 
 class DecoderLayer():
-    def __init__(self, d_model, heads_num, d_ff, dropout):
+    def __init__(self, d_model, heads_num, d_ff, dropout, data_type):
         super(DecoderLayer, self).__init__()
 
-        self.self_attention_norm = LayerNormalization(d_model, epsilon=1e-6)
-        self.enc_attn_layer_norm = LayerNormalization(d_model, epsilon=1e-6)
-        self.ff_layer_norm = LayerNormalization(d_model, epsilon=1e-6)
-        self.self_attention = MultiHeadAttention(d_model, heads_num, dropout)
-        self.encoder_attention = MultiHeadAttention(d_model, heads_num, dropout)
+        self.self_attention_norm = LayerNormalization(d_model, epsilon=1e-6, data_type = data_type)
+        self.enc_attn_layer_norm = LayerNormalization(d_model, epsilon=1e-6, data_type = data_type)
+        self.ff_layer_norm       = LayerNormalization(d_model, epsilon=1e-6, data_type = data_type)
+        self.self_attention    = MultiHeadAttention(d_model, heads_num, dropout, data_type)
+        self.encoder_attention = MultiHeadAttention(d_model, heads_num, dropout, data_type)
         self.position_wise_feed_forward = PositionwiseFeedforward(d_model, d_ff, dropout)
 
-        self.dropout = Dropout(dropout)
+        self.dropout = Dropout(dropout, data_type)
 
     def forward(self, trg, trg_mask, src, src_mask):
         _trg, _ = self.self_attention.forward(trg, trg, trg, trg_mask)
