@@ -7,5 +7,5 @@ A numpy implementation of the Transformer model in "Attention is All You Need"
 
 Some methods were borrowed from my [np-nn-model ](https://github.com/AkiRusProd/numpy-nn-model) repository
 
-### Reference of the article "Attention is All You Need":
-https://arxiv.org/abs/1706.03762
+### References:
+ - https://arxiv.org/abs/1706.03762 - article "Attention is All You Need"
