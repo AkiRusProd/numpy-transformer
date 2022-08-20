@@ -5,5 +5,7 @@ A numpy implementation of the Transformer model in "Attention is All You Need"
 <img src="images/The-Transformer-model-architecture.png" width=50% height=50%>
 </p>
 
-Reference:
-https://arxiv.org/abs/1706.03762?amp=1
+Some methods were borrowed from my [np-nn-model ](https://github.com/AkiRusProd/numpy-nn-model) repository
+
+### Reference of the article "Attention is All You Need":
+https://arxiv.org/abs/1706.03762
