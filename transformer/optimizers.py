@@ -119,16 +119,18 @@ class Noam():
         self.warmup_steps = warmup_steps
         self.steps_num = 0
 
-    def compute_learning_rate(self):
-        return self.scale_factor * (
-            self.model_dim ** (-0.5)
-            * min(self.steps_num ** (-0.5), self.steps_num * self.warmup_steps ** (-1.5))
+    @staticmethod
+    @njit
+    def compute_learning_rate(scale_factor, model_dim, steps_num, warmup_steps):
+        return scale_factor * (
+            model_dim ** (-0.5)
+            * min(steps_num ** (-0.5), steps_num * warmup_steps ** (-1.5))
         )
 
     def update(self, gradient, weights, v, m, v_hat, m_hat, t):
         self.steps_num += 1
 
-        self.optimizer.alpha = self.compute_learning_rate()
+        self.optimizer.alpha = self.compute_learning_rate(self.scale_factor, self.model_dim, self.steps_num, self.warmup_steps)
         return self.optimizer.update(gradient, weights, v, m, v_hat, m_hat, t)
     
 
