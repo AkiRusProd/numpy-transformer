@@ -273,14 +273,14 @@ class Transformer():
                 self.update_weights()
 
                 tqdm_range.set_description(
-                        f"loss: {loss_history[-1]:.7f} | perplexity: {np.exp(loss_history[-1]):.7f} | epoch {epoch + 1}/{epochs}" #loss: {loss:.4f}
+                        f"training | loss: {loss_history[-1]:.7f} | perplexity: {np.exp(loss_history[-1]):.7f} | epoch {epoch + 1}/{epochs}" #loss: {loss:.4f}
                     )
 
                 if batch_num == (len(source) - 1):
                     epoch_loss = np.mean(loss_history[(epoch) * len(source) : (epoch + 1) * len(source) ])
 
                     tqdm_range.set_description(
-                            f"epoch loss: {epoch_loss:.7f} | epoch perplexity: {np.exp(epoch_loss):.7f} | epoch {epoch + 1}/{epochs}"
+                            f"training | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f} | epoch {epoch + 1}/{epochs}"
                     )
 
             if (save_path is not None) and (epoch % save_every_epochs == 0):
@@ -289,13 +289,65 @@ class Transformer():
         return loss_history
 
 
+    def evaluate(self, source, target):
+        loss_history = []
+
+        tqdm_range = tqdm(enumerate(zip(source, target)), total = len(source))
+        for batch_num, (source_batch, target_batch) in tqdm_range:
+            
+            output, attention = self.forward(source_batch, target_batch[:,:-1])
+            
+            _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
+
+            loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].astype(np.int32).flatten()).mean())
+            
+            tqdm_range.set_description(
+                    f"testing | loss: {loss_history[-1]:.7f} | perplexity: {np.exp(loss_history[-1]):.7f}"
+                )
+
+            if batch_num == (len(source) - 1):
+                epoch_loss = np.mean(loss_history)
+
+                tqdm_range.set_description(
+                        f"testing | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f}"
+                )
+
+        return loss_history
+
+    def predict(self, sentence, vocabs, max_length = 50):
+
+        src_inds = [vocabs[0][word] if word in vocabs[0] else UNK_INDEX for word in sentence]
+        src_inds = [SOS_INDEX] + src_inds + [EOS_INDEX]
+        
+        src = np.asarray(src_inds).reshape(1, -1)
+        src_mask =  self.get_pad_mask(src)
+
+        enc_src = self.encoder.forward(src, src_mask)
+
+        trg_inds = [SOS_INDEX]
+
+        for i in range(max_length):
+            trg = np.asarray(trg_inds).reshape(1, -1)
+            trg_mask = self.get_pad_mask(trg) & self.get_sub_mask(trg)
+
+            out, attention = self.decoder.forward(trg, trg_mask, enc_src, src_mask)
+            
+            trg_indx = out.argmax(axis=-1)[:, -1].item()
+            trg_inds.append(trg_indx)
+
+            if trg_indx == EOS_INDEX or len(trg_inds) >= max_length:
+                break
+        
+        reversed_vocab = dict((v,k) for k,v in vocabs[1].items())
+        decoded_sentence = [reversed_vocab[indx] if indx in reversed_vocab else UNK_TOKEN for indx in trg_inds]
+
+        return decoded_sentence[1:], attention[0]
 
 
 
-INPUT_DIM = len(train_data_vocabs[0])#10
-OUTPUT_DIM = len(train_data_vocabs[1])#5
-# INPUT_DIM = 10
-# OUTPUT_DIM = 10
+
+INPUT_DIM = len(train_data_vocabs[0])
+OUTPUT_DIM = len(train_data_vocabs[1])
 HID_DIM = 256#512
 ENC_LAYERS = 3
 DEC_LAYERS = 3
@@ -316,7 +368,7 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 array = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 array2 = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
 model = Transformer(encoder, decoder, PAD_INDEX)
-#lr = 0.00005; 1e-4
+
 def data_gen(V, batch, nbatches):
     src_batch = []
     trg_batch = []
@@ -331,6 +383,8 @@ def data_gen(V, batch, nbatches):
 
 # source, target = data_gen(10, 2, 1)
 
+# sentence = ['a', 'trendy', 'girl', 'talking', 'on', 'her', 'cellphone', 'while', 'gliding', 'slowly', 'down', 'the', 'street']
+# print(model.predict(sentence, train_data_vocabs)[0])
 # model.compile(optimizer = Adam(alpha = 0.0005), loss_function = CrossEntropy(ignore_index=PAD_INDEX))#alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9
 model.compile(
                 optimizer = Noam(
