@@ -10,69 +10,9 @@ from transformer.modules import Encoder
 from transformer.modules import Decoder
 from transformer.optimizers import Adam, Nadam, Momentum, RMSProp, SGD, Noam
 from transformer.losses import CategoricalCrossEntropy, BinaryCrossEntropy, MSE, CrossEntropy #TorchCrossEntropy
+from transformer.prepare_data import DataPreparator
 import matplotlib.pyplot as plt
-
-def filter_seq(seq):
-    chars2remove = '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'
-
-    return ''.join([c for c in seq if c not in chars2remove])
-
-def lowercase_seq(seq):
-    return seq.lower()
-
-
-def import_multi30k_dataset(path = '/home/rustam/coding/python/numpy-transformer/dataset/'): #/dataset
-    
-    ret = []
-    filenames = ["train", "val", "test"]
-    # en_words, de_words = [], []
-
-    for filename in filenames:
-
-        examples = []
-
-        en_path = os.path.join(path, filename + '.en')
-        de_path = os.path.join(path, filename + '.de')
-
-        en_file = [l.strip() for l in open(en_path, 'r', encoding='utf-8')]
-        de_file = [l.strip() for l in open(de_path, 'r', encoding='utf-8')]
-
-        assert len(en_file) == len(de_file)
-
-        for i in range(len(en_file)):
-            if en_file[i] != '' and de_file[i] != '':
-                en_seq, de_seq = en_file[i], de_file[i]
-                # en_seq, de_seq = filter_seq(en_file[i]), filter_seq(de_file[i])
-                # en_seq, de_seq = lowercase_seq(en_seq), lowercase_seq(de_seq)
-                # en_words.extend(en_seq.split()), de_words.extend(de_seq.split())
-
-                examples.append({'en': en_seq, 'de': de_seq})
-        # print(len(set(en_words)), len(set(de_words)))
-        ret.append(examples)
-    # print(len(set(en_words)), len(set(de_words)))
-
-    return tuple(ret)
-
-train_data, val_data, test_data = import_multi30k_dataset()
-
-
-
-def clear_dataset(*data):
-
-    for dataset in data:
-        for example in dataset:
-            example['en'] = filter_seq(example['en'])
-            example['de'] = filter_seq(example['de'])
-
-            example['en'] = lowercase_seq(example['en'])
-            example['de'] = lowercase_seq(example['de'])
-
-            example['en'] = example['en'].split()
-            example['de'] = example['de'].split()
-
-    return data
-
-train_data, val_data, test_data = clear_dataset(train_data, val_data, test_data)
+import matplotlib.ticker as ticker
 
 
 
@@ -89,87 +29,21 @@ SOS_INDEX = 1
 EOS_INDEX = 2
 UNK_INDEX = 3
 
-toks_and_inds = {PAD_TOKEN: PAD_INDEX, SOS_TOKEN: SOS_INDEX, EOS_TOKEN: EOS_INDEX, UNK_TOKEN: UNK_INDEX}
+tokens  = (PAD_TOKEN, SOS_TOKEN, EOS_TOKEN, UNK_TOKEN)
+indexes = (PAD_INDEX, SOS_INDEX, EOS_INDEX, UNK_INDEX)
 
-def build_vocab(dataset, toks_and_inds, min_freq = 1):
-    en_vocab = toks_and_inds.copy(); en_vocab_freqs = {}
-    de_vocab = toks_and_inds.copy(); de_vocab_freqs = {}
+data_preparator = DataPreparator(tokens, indexes)
 
-    for example in dataset:
-        for word in example['en']:
-            if word not in en_vocab_freqs:
-                en_vocab_freqs[word] = 0
-            en_vocab_freqs[word] += 1
-        for word in example['de']:
-            if word not in de_vocab_freqs:
-                de_vocab_freqs[word] = 0
-            de_vocab_freqs[word] += 1
+source, target = data_preparator.prepare_data(
+                    path = '/home/rustam/coding/python/numpy-transformer/dataset/', 
+                    batch_size = BATCH_SIZE, 
+                    min_freq = 10)
 
-    for example in dataset:
-        for word in example['en']:
-            if word not in en_vocab and en_vocab_freqs[word] >= min_freq:
-                en_vocab[word] = len(en_vocab)
-        for word in example['de']:
-            if word not in de_vocab and de_vocab_freqs[word] >= min_freq:
-                de_vocab[word] = len(de_vocab)
-
-    return en_vocab, de_vocab
-
-train_data_vocabs = build_vocab(train_data, toks_and_inds, min_freq = 100)
-print(len(train_data_vocabs[0]), len(train_data_vocabs[1]))
-
-
-def add_tokens(dataset, batch_size):
-    print("datalength:", len(dataset))
-
-    for example in dataset:
-        example['en'] = [SOS_TOKEN] + example['en'] + [EOS_TOKEN]
-        example['de'] = [SOS_TOKEN] + example['de'] + [EOS_TOKEN]
-        
-    data_batches = np.array_split(dataset, np.arange(batch_size, len(dataset), batch_size))
-
-    for batch in data_batches:
-        max_en_seq_len, max_de_seq_len = 0, 0
-
-        for example in batch:
-            max_en_seq_len = max(max_en_seq_len, len(example['en']))
-            max_de_seq_len = max(max_de_seq_len, len(example['de']))
-
-        for example in batch:
-            example['en'] = example['en'] + [PAD_TOKEN] * (max_en_seq_len - len(example['en']))
-            example['de'] = example['de'] + [PAD_TOKEN] * (max_de_seq_len - len(example['de']))
-
-
-    return data_batches
-
-train_data = add_tokens(train_data, batch_size = BATCH_SIZE)
-print(f"batch number: {len(train_data)}")
-
-def build_dataset(dataset, vocabs):
-    # tokens_dataset = []
-    source, target = [], []
-    for batch in dataset:
-        # batch_tokens = []
-        source_tokens, target_tokens = [], []
-        for example in batch:
-            en_inds = [vocabs[0][word] if word in vocabs[0] else UNK_INDEX for word in example['en']]
-            de_inds = [vocabs[1][word] if word in vocabs[1] else UNK_INDEX for word in example['de']]
-            # batch_tokens.append({'en': en_inds, 'de': de_inds})
-            source_tokens.append(en_inds)
-            target_tokens.append(de_inds)
-
-        # tokens_dataset.append(np.asarray(batch_tokens))
-        source.append(np.asarray(source_tokens))
-        target.append(np.asarray(target_tokens))
-    return source, target#tokens_dataset
-
-source, target = build_dataset(train_data, train_data_vocabs)
-# print(train_data[0])
-# print(source[0])
+train_data_vocabs = data_preparator.get_vocabs()
 
 
 
-class Transformer():
+class Seq2Seq():
 
     def __init__(self, encoder, decoder, pad_idx) -> None:
         self.encoder = encoder
@@ -226,7 +100,7 @@ class Transformer():
         subsequent_mask = np.logical_not(subsequent_mask)
         return subsequent_mask
 
-    def forward(self, src, trg):
+    def forward(self, src, trg, training):
         src, trg = src.astype(DATA_TYPE), trg.astype(DATA_TYPE)
         #src: (batch_size, source_seq_len)
         #tgt: (batch_size, target_seq_len)
@@ -237,11 +111,11 @@ class Transformer():
 
         trg_mask = self.get_pad_mask(trg) & self.get_sub_mask(trg)
 
-        enc_src = self.encoder.forward(src, src_mask)
+        enc_src = self.encoder.forward(src, src_mask, training)
 
-        out, attention = self.decoder.forward(trg, trg_mask, enc_src, src_mask)
+        out, attention = self.decoder.forward(trg, trg_mask, enc_src, src_mask, training)
         # output: (batch_size, target_seq_len, vocab_size)
-        # attn: (batch_size, n_heads, target_seq_len, source_seq_len)
+        # attn: (batch_size, heads_num, target_seq_len, source_seq_len)
         return out, attention
 
     def backward(self, error):
@@ -261,7 +135,7 @@ class Transformer():
             tqdm_range = tqdm(enumerate(zip(source, target)), total = len(source))
             for batch_num, (source_batch, target_batch) in tqdm_range:
                 
-                output, attention = self.forward(source_batch, target_batch[:,:-1])
+                output, attention = self.forward(source_batch, target_batch[:,:-1], training = True)
                
                 _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
 
@@ -295,7 +169,7 @@ class Transformer():
         tqdm_range = tqdm(enumerate(zip(source, target)), total = len(source))
         for batch_num, (source_batch, target_batch) in tqdm_range:
             
-            output, attention = self.forward(source_batch, target_batch[:,:-1])
+            output, attention = self.forward(source_batch, target_batch[:,:-1], training = False)
             
             _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
 
@@ -322,15 +196,15 @@ class Transformer():
         src = np.asarray(src_inds).reshape(1, -1)
         src_mask =  self.get_pad_mask(src)
 
-        enc_src = self.encoder.forward(src, src_mask)
+        enc_src = self.encoder.forward(src, src_mask, training = False)
 
         trg_inds = [SOS_INDEX]
 
-        for i in range(max_length):
+        for _ in range(max_length):
             trg = np.asarray(trg_inds).reshape(1, -1)
             trg_mask = self.get_pad_mask(trg) & self.get_sub_mask(trg)
 
-            out, attention = self.decoder.forward(trg, trg_mask, enc_src, src_mask)
+            out, attention = self.decoder.forward(trg, trg_mask, enc_src, src_mask, training = False)
             
             trg_indx = out.argmax(axis=-1)[:, -1].item()
             trg_inds.append(trg_indx)
@@ -348,12 +222,12 @@ class Transformer():
 
 INPUT_DIM = len(train_data_vocabs[0])
 OUTPUT_DIM = len(train_data_vocabs[1])
-HID_DIM = 256#512
-ENC_LAYERS = 3
-DEC_LAYERS = 3
+HID_DIM = 256  #512 in original paper
+ENC_LAYERS = 3 #6 in original paper
+DEC_LAYERS = 3 #6 in original paper
 ENC_HEADS = 8
 DEC_HEADS = 8
-FF_SIZE = 512#2048
+FF_SIZE = 512  #2048 in original paper
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
@@ -365,39 +239,37 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 
 
 
-array = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
-array2 = np.array([1, 8, 3, 4, 2, 0]).reshape(2, 3)
-model = Transformer(encoder, decoder, PAD_INDEX)
+model = Seq2Seq(encoder, decoder, PAD_INDEX)
 
-def data_gen(V, batch, nbatches):
-    src_batch = []
-    trg_batch = []
-    "Generate random data for a src-tgt copy task."
-    for i in range(nbatches):
-        data = np.random.randint(1, V, size=(batch, 6))
-        data[:, 0] = 1
+# def data_gen(V, batch, nbatches):
+#     src_batch = []
+#     trg_batch = []
+#     "Generate random data for a src-tgt copy task."
+#     for i in range(nbatches):
+#         data = np.random.randint(1, V, size=(batch, 6))
+#         data[:, 0] = 1
 
-        src_batch.append(data)
-        trg_batch.append(data)
-    return src_batch, trg_batch
+#         src_batch.append(data)
+#         trg_batch.append(data)
+#     return src_batch, trg_batch
 
 # source, target = data_gen(10, 2, 1)
 
-# sentence = ['a', 'trendy', 'girl', 'talking', 'on', 'her', 'cellphone', 'while', 'gliding', 'slowly', 'down', 'the', 'street']
-# print(model.predict(sentence, train_data_vocabs)[0])
-# model.compile(optimizer = Adam(alpha = 0.0005), loss_function = CrossEntropy(ignore_index=PAD_INDEX))#alpha = 1e-4, beta=0.9, beta2=0.98, epsilon = 1e-9
+model.load("saved models/#seq2seq_newf32/2")
+
+
 model.compile(
                 optimizer = Noam(
-                                Adam(alpha = 1e-4, beta = 0.9, beta2 = 0.99, epsilon = 1e-9), #NOTE: alpha doesnt matter for Noam scheduler
+                                Adam(alpha = 1e-4, beta = 0.9, beta2 = 0.98, epsilon = 1e-9), #NOTE: alpha doesnt matter for Noam scheduler
                                 model_dim = HID_DIM,
                                 scale_factor = 2,
                                 warmup_steps = 4000
-                            ), 
-                loss_function = CrossEntropy(ignore_index=PAD_INDEX)
+                            ) 
+                , loss_function = CrossEntropy(ignore_index=PAD_INDEX)
             )
-loss_history = model.fit([source[10]], [target[10]], epochs = 500, save_every_epochs = 1, save_path = None)
+loss_history = model.fit(source, target, epochs = 10, save_every_epochs = 1, save_path = None)
 
-#plot loss history
+
 def plot_loss_history(loss_history):
     plt.plot(loss_history)
     plt.title('Loss history')
@@ -407,3 +279,35 @@ def plot_loss_history(loss_history):
         
 
 plot_loss_history(loss_history)
+
+
+
+sentence = ['a', 'trendy', 'girl', 'talking', 'on', 'her', 'cellphone', 'while', 'gliding', 'slowly', 'down', 'the', 'street']
+decoded_sentence, attention =  model.predict(sentence, train_data_vocabs)
+
+def plot_attention(sentence, translation, attention, heads_num = 8, rows_num = 2, cols_num = 4):
+    
+    assert rows_num * cols_num == heads_num
+    
+    sentence = [SOS_TOKEN] + [word.lower() for word in sentence] + [EOS_TOKEN]
+
+    fig = plt.figure(figsize = (15, 25))
+    
+    for h in range(heads_num):
+        
+        ax = fig.add_subplot(rows_num, cols_num, h + 1)
+        ax.set_xlabel(f'Head {h + 1}')
+
+        ax.matshow(attention[h], cmap = 'inferno')
+        ax.tick_params(labelsize = 7)
+
+        ax.set_xticks(range(len(sentence)))
+        ax.set_yticks(range(len(translation)))
+
+        ax.set_xticklabels(sentence, rotation=90)
+        ax.set_yticklabels(translation)
+
+
+    plt.show()
+
+plot_attention(sentence, decoded_sentence, attention)

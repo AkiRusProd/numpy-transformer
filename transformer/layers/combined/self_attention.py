@@ -9,7 +9,6 @@ class MultiHeadAttention:
     def __init__(self, d_model = 512, heads_num = 8, dropout = 0.1, data_type = None):
         self.d_model = d_model
         self.heads_num = heads_num
-        self.dropout = dropout
 
         self.data_type = data_type
 
@@ -47,7 +46,7 @@ class MultiHeadAttention:
         
     #FORWARD OK 
 
-    def forward(self, query, key, value, mask):
+    def forward(self, query, key, value, mask, training = True):
         batch_size = key.shape[0]
         
         self.key_len, self.query_len, self.value_len = key.shape[1], query.shape[1], value.shape[1]
@@ -79,7 +78,7 @@ class MultiHeadAttention:
         # print(energy.shape)
         attention = self.activation.forward(energy)
 
-        self.dropout_attention = self.dropout.forward(attention)
+        self.dropout_attention = self.dropout.forward(attention, training)
         output = np.matmul(self.dropout_attention, self.V)
 
         # concat_output = output.reshape(batch_size, self.query_len, self.heads_num * self.d_v) #self.d_model

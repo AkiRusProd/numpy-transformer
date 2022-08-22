@@ -17,16 +17,16 @@ class DecoderLayer():
 
         self.dropout = Dropout(dropout, data_type)
 
-    def forward(self, trg, trg_mask, src, src_mask):
-        _trg, _ = self.self_attention.forward(trg, trg, trg, trg_mask)
-        trg = self.self_attention_norm.forward(trg + self.dropout.forward(_trg))
+    def forward(self, trg, trg_mask, src, src_mask, training):
+        _trg, _ = self.self_attention.forward(trg, trg, trg, trg_mask, training)
+        trg = self.self_attention_norm.forward(trg + self.dropout.forward(_trg, training))
 
-        _trg, attention = self.encoder_attention.forward(trg, src, src, src_mask)
-        trg = self.enc_attn_layer_norm.forward(trg + self.dropout.forward(_trg))
+        _trg, attention = self.encoder_attention.forward(trg, src, src, src_mask, training)
+        trg = self.enc_attn_layer_norm.forward(trg + self.dropout.forward(_trg, training))
 
 
-        _trg = self.position_wise_feed_forward.forward(trg)
-        trg = self.ff_layer_norm.forward(trg + self.dropout.forward(_trg))
+        _trg = self.position_wise_feed_forward.forward(trg, training)
+        trg = self.ff_layer_norm.forward(trg + self.dropout.forward(_trg, training))
 
         return trg, attention
 

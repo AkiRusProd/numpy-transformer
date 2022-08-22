@@ -21,16 +21,16 @@ class Encoder:
         self.dropout = Dropout(dropout, data_type)
         self.scale = np.sqrt(d_model).astype(data_type) 
 
-    def forward(self, src, src_mask):
+    def forward(self, src, src_mask, training):
         # batchsize, seq_length = src.shape
         # positions = np.tile(np.arange(0, seq_length), (batchsize, 1))
         # src = self.dropout.forward((self.token_embedding.forward(src) * self.scale + self.position_embedding.forward(positions)))
         src = self.token_embedding.forward(src) * self.scale
         src = self.position_embedding.forward(src)
-        src = self.dropout.forward(src)
+        src = self.dropout.forward(src, training)
 
         for layer in self.layers:
-            src = layer.forward(src, src_mask)
+            src = layer.forward(src, src_mask, training)
 
         return src
 

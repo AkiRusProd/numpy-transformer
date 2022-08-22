@@ -21,7 +21,9 @@ class Dropout():
         self.output_shape = self.input_shape
 
     def forward(self, X, training = True):
-        self.mask = np.random.binomial(
+
+        self.mask = 1.0
+        if training: self.mask = np.random.binomial(
                         n = 1,
                         p = 1 - self.rate,
                         size = X.shape,

@@ -16,12 +16,12 @@ class EncoderLayer:
 
         self.dropout = Dropout(dropout, data_type)
 
-    def forward(self, src, src_mask):
-        _src, _ = self.self_attention.forward(src, src, src, src_mask)
-        src = self.self_attention_norm.forward(src + self.dropout.forward(_src))
+    def forward(self, src, src_mask, training):
+        _src, _ = self.self_attention.forward(src, src, src, src_mask, training)
+        src = self.self_attention_norm.forward(src + self.dropout.forward(_src, training))
         
-        _src = self.position_wise_feed_forward.forward(src)
-        src = self.ff_layer_norm.forward(src + self.dropout.forward(_src))
+        _src = self.position_wise_feed_forward.forward(src, training)
+        src = self.ff_layer_norm.forward(src + self.dropout.forward(_src, training))
 
         return src
 

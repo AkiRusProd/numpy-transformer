@@ -27,16 +27,16 @@ class Decoder:
         self.activation = Identity()#Activation(Identity())
 
 
-    def forward(self, trg, trg_mask, src, src_mask):
+    def forward(self, trg, trg_mask, src, src_mask, training):
         batchsize, seq_length = trg.shape
         # positions = np.tile(np.arange(0, seq_length), (batchsize, 1))
         # trg = self.dropout.forward((self.token_embedding.forward(trg) * self.scale + self.position_embedding.forward(positions)))
         trg = self.token_embedding.forward(trg) * self.scale
         trg = self.position_embedding.forward(trg)
-        trg = self.dropout.forward(trg)
+        trg = self.dropout.forward(trg, training)
        
         for layer in self.layers:
-            trg, attention = layer.forward(trg, trg_mask, src, src_mask)
+            trg, attention = layer.forward(trg, trg_mask, src, src_mask, training)
         
         output = self.fc_out.forward(trg)
         
