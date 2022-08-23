@@ -11,3 +11,8 @@ Since the model is implemented at numpy, it runs on the CPU. Therefore, I have t
 
 ### References:
  - https://arxiv.org/abs/1706.03762 - article "Attention is All You Need"
+
+### TODO:
+1) add pretrained model (very soon)
+2) clean up and refactor code
+

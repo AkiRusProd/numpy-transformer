@@ -34,9 +34,15 @@ class DataPreparator():
         train_data = self.add_tokens(train_data, batch_size)
         print(f"batch num = {len(train_data)}")
 
-        source, target = self.build_dataset(train_data, self.vocabs)
+        train_source, train_target = self.build_dataset(train_data, self.vocabs)
 
-        return source, target
+        test_data = self.add_tokens(test_data, batch_size)
+        test_source, test_target = self.build_dataset(test_data, self.vocabs)
+
+        val_data = self.add_tokens(val_data, batch_size)
+        val_source, val_target = self.build_dataset(val_data, self.vocabs)
+
+        return (train_source, train_target), (test_source, test_target), (val_source, val_target)
 
     def get_vocabs(self):
         return self.vocabs

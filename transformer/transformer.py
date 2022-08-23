@@ -17,7 +17,7 @@ import matplotlib.ticker as ticker
 
 
 DATA_TYPE = np.float32
-BATCH_SIZE = 2
+BATCH_SIZE = 4
 
 PAD_TOKEN = '<pad>'
 SOS_TOKEN = '<sos>'
@@ -34,10 +34,12 @@ indexes = (PAD_INDEX, SOS_INDEX, EOS_INDEX, UNK_INDEX)
 
 data_preparator = DataPreparator(tokens, indexes)
 
-source, target = data_preparator.prepare_data(
+train_data, test_data, val_data = data_preparator.prepare_data(
                     path = 'dataset/', 
                     batch_size = BATCH_SIZE, 
                     min_freq = 10)
+
+source, target = train_data
 
 train_data_vocabs = data_preparator.get_vocabs()
 
@@ -255,7 +257,7 @@ model = Seq2Seq(encoder, decoder, PAD_INDEX)
 
 # source, target = data_gen(10, 2, 1)
 
-model.load("saved models/#seq2seq_newf32_3/2")
+model.load("saved models/#seq2seq_newf32_4/0")
 
 
 model.compile(
