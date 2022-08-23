@@ -35,7 +35,7 @@ indexes = (PAD_INDEX, SOS_INDEX, EOS_INDEX, UNK_INDEX)
 data_preparator = DataPreparator(tokens, indexes)
 
 source, target = data_preparator.prepare_data(
-                    path = '/home/rustam/coding/python/numpy-transformer/dataset/', 
+                    path = 'dataset/', 
                     batch_size = BATCH_SIZE, 
                     min_freq = 10)
 
@@ -255,7 +255,7 @@ model = Seq2Seq(encoder, decoder, PAD_INDEX)
 
 # source, target = data_gen(10, 2, 1)
 
-model.load("saved models/#seq2seq_newf32/2")
+model.load("saved models/#seq2seq_newf32_3/2")
 
 
 model.compile(
@@ -267,7 +267,7 @@ model.compile(
                             ) 
                 , loss_function = CrossEntropy(ignore_index=PAD_INDEX)
             )
-loss_history = model.fit(source, target, epochs = 10, save_every_epochs = 1, save_path = None)
+# loss_history = model.fit(source, target, epochs = 10, save_every_epochs = 1, save_path = None)
 
 
 def plot_loss_history(loss_history):
@@ -278,12 +278,14 @@ def plot_loss_history(loss_history):
     plt.show()
         
 
-plot_loss_history(loss_history)
+# plot_loss_history(loss_history)
 
 
 
 sentence = ['a', 'trendy', 'girl', 'talking', 'on', 'her', 'cellphone', 'while', 'gliding', 'slowly', 'down', 'the', 'street']
+print(f"Input sentence: {sentence}")
 decoded_sentence, attention =  model.predict(sentence, train_data_vocabs)
+print(f"Decoded sentence: {decoded_sentence}")
 
 def plot_attention(sentence, translation, attention, heads_num = 8, rows_num = 2, cols_num = 4):
     

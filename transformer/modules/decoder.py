@@ -7,7 +7,7 @@ from transformer.activations import Identity, Softmax
 from transformer.layers.combined.positional_encoding import PositionalEncoding
 
 
-data_type = np.float32
+
 
 class Decoder:
     def __init__(self, trg_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000, data_type = np.float32):
@@ -28,7 +28,7 @@ class Decoder:
 
 
     def forward(self, trg, trg_mask, src, src_mask, training):
-        batchsize, seq_length = trg.shape
+        # batchsize, seq_length = trg.shape
         # positions = np.tile(np.arange(0, seq_length), (batchsize, 1))
         # trg = self.dropout.forward((self.token_embedding.forward(trg) * self.scale + self.position_embedding.forward(positions)))
         trg = self.token_embedding.forward(trg) * self.scale

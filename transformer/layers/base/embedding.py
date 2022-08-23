@@ -8,16 +8,14 @@ class Embedding():
         Args:
             `input_dim`: (int), size of vocabulary
             `output_dim` (int): number of neurons in the layer (vector size)
-            `input_length` (int): length of the input sequence,  (without it, the shape of the dense outputs cannot be computed)
         Returns:
             input: data with shape (batch_size, input_length)
             output: data with shape (batch_size, input_length, output_dim)
     """
 
-    def __init__(self, input_dim, output_dim, input_length = None, data_type = np.float32):
+    def __init__(self, input_dim, output_dim, data_type = np.float32):
         self.input_dim = input_dim
         self.output_dim   = output_dim
-        self.input_length =  input_length
 
         self.w = None
 
@@ -43,20 +41,12 @@ class Embedding():
 
     #one hot encoding
     def prepare_labels(self, batch_labels):
-        prepared_batch_labels = []
+        batch_labels = batch_labels.astype(np.int32)
         
-        for sequence in batch_labels:
-            for label in sequence:
-                correct_label = int(label)
+        prepared_batch_labels = np.zeros((batch_labels.size,  self.input_dim)) #batch_labels.max() + 1)
+        prepared_batch_labels[np.arange(batch_labels.size), batch_labels.reshape(1, -1)] = 1
 
-                labels_list = np.zeros(self.input_dim)
-
-                labels_list[correct_label] = 1
-
-                prepared_batch_labels.append(labels_list)
-
-        
-        return np.asarray(prepared_batch_labels).reshape(self.batch_size, self.current_input_length, self.input_dim).astype(self.data_type) 
+        return prepared_batch_labels.reshape(self.batch_size, self.current_input_length, self.input_dim).astype(self.data_type) 
 
 
     def forward(self, X):

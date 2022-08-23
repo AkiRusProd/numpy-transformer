@@ -5,7 +5,7 @@ from transformer.layers.combined.encoder_layer import EncoderLayer
 from transformer.layers.combined.positional_encoding import PositionalEncoding
 
 
-data_type = np.float32
+
 
 class Encoder:
     def __init__(self, src_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000, data_type = np.float32):
