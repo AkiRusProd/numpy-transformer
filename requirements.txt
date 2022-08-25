@@ -1,0 +1,5 @@
+matplotlib==3.5.3
+numba==0.56.0
+numpy==1.22.4
+requests==2.25.1
+tqdm==4.64.0
