@@ -1,6 +1,6 @@
 # numpy-transformer
 ## What it is?
-This is a numpy implementation of the Transformer (Seq2Seq) model in original paper `"Attention is All You Need"`, that runs at CPU.
+This is a numpy implementation of the Transformer (Seq2Seq) model in original paper "Attention is All You Need", that runs at CPU.
 
 <p align="center">
 <img src="images/The-Transformer-model-architecture.png" width=50% height=50%>
