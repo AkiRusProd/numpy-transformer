@@ -9,15 +9,14 @@ from tqdm import tqdm
 from transformer.modules import Encoder
 from transformer.modules import Decoder
 from transformer.optimizers import Adam, Nadam, Momentum, RMSProp, SGD, Noam
-from transformer.losses import CategoricalCrossEntropy, BinaryCrossEntropy, MSE, CrossEntropy #TorchCrossEntropy
+from transformer.losses import CrossEntropy
 from transformer.prepare_data import DataPreparator
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 
 
 
 DATA_TYPE = np.float32
-BATCH_SIZE = 4
+BATCH_SIZE = 8
 
 PAD_TOKEN = '<pad>'
 SOS_TOKEN = '<sos>'
@@ -53,7 +52,7 @@ class Seq2Seq():
         self.pad_idx = pad_idx
 
         self.optimizer = Adam()
-        self.loss_function = CategoricalCrossEntropy()
+        self.loss_function = CrossEntropy()
 
     def set_optimizer(self):
         encoder.set_optimizer(self.optimizer)
@@ -243,33 +242,20 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 
 model = Seq2Seq(encoder, decoder, PAD_INDEX)
 
-# def data_gen(V, batch, nbatches):
-#     src_batch = []
-#     trg_batch = []
-#     "Generate random data for a src-tgt copy task."
-#     for i in range(nbatches):
-#         data = np.random.randint(1, V, size=(batch, 6))
-#         data[:, 0] = 1
 
-#         src_batch.append(data)
-#         trg_batch.append(data)
-#     return src_batch, trg_batch
-
-# source, target = data_gen(10, 2, 1)
-
-model.load("saved models/#seq2seq_newf32_4/0")
+model.load("saved models/seq2seq_model/0")
 
 
 model.compile(
                 optimizer = Noam(
-                                Adam(alpha = 1e-4, beta = 0.9, beta2 = 0.98, epsilon = 1e-9), #NOTE: alpha doesnt matter for Noam scheduler
+                                Adam(alpha = 1e-4, beta = 0.9, beta2 = 0.98, epsilon = 1e-9), #NOTE: alpha doesn`t matter for Noam scheduler
                                 model_dim = HID_DIM,
                                 scale_factor = 2,
                                 warmup_steps = 4000
                             ) 
                 , loss_function = CrossEntropy(ignore_index=PAD_INDEX)
             )
-# loss_history = model.fit(source, target, epochs = 10, save_every_epochs = 1, save_path = None)
+# loss_history = model.fit(source, target, epochs = 10, save_every_epochs = 1, save_path = "saved models/seq2seq_model")
 
 
 def plot_loss_history(loss_history):
@@ -284,10 +270,22 @@ def plot_loss_history(loss_history):
 
 
 
-sentence = ['a', 'trendy', 'girl', 'talking', 'on', 'her', 'cellphone', 'while', 'gliding', 'slowly', 'down', 'the', 'street']
-print(f"Input sentence: {sentence}")
-decoded_sentence, attention =  model.predict(sentence, train_data_vocabs)
-print(f"Decoded sentence: {decoded_sentence}")
+_, _, val_data = data_preparator.import_multi30k_dataset(path = "dataset/")
+val_data = data_preparator.clear_dataset(val_data)[0]
+sentences_num = 10
+
+random_indices = np.random.randint(0, len(val_data), sentences_num)
+sentences_selection = [val_data[i] for i in random_indices]
+
+#Translate sentences from validation set
+for i, example in enumerate(sentences_selection):
+    print(f"\nExample №{i + 1}")
+    print(f"Input sentence: { ' '.join(example['en'])}")
+    print(f"Decoded sentence: {' '.join(model.predict(example['en'], train_data_vocabs)[0])}")
+    print(f"Target sentence: {' '.join(example['de'])}")
+
+
+
 
 def plot_attention(sentence, translation, attention, heads_num = 8, rows_num = 2, cols_num = 4):
     
@@ -313,5 +311,11 @@ def plot_attention(sentence, translation, attention, heads_num = 8, rows_num = 2
 
 
     plt.show()
+
+#Plot Attention
+sentence = sentences_selection[0]['en']#['a', 'trendy', 'girl', 'talking', 'on', 'her', 'cellphone', 'while', 'gliding', 'slowly', 'down', 'the', 'street']
+print(f"\nInput sentence: {sentence}")
+decoded_sentence, attention =  model.predict(sentence, train_data_vocabs)
+print(f"Decoded sentence: {decoded_sentence}")
 
 plot_attention(sentence, decoded_sentence, attention)
