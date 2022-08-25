@@ -65,15 +65,15 @@ Target sentence: ein älterer mann sitzt in einem stuhl und isst ein paar snacks
 Attention plots:
 
 <p align="center">
-<img src="images/Figure_1.png" width=75% height=75%>
+<img src="images/Figure_1.png" width=100% height=100%>
 </p>
 
 <p align="center">
-<img src="images/Figure_2.png" width=75% height=75%>
+<img src="images/Figure_2.png" width=100% height=100%>
 </p>
 
 <p align="center">
-<img src="images/Figure_3.png" width=75% height=75%>
+<img src="images/Figure_3.png" width=100% height=100%>
 </p>
 
 
