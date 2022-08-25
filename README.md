@@ -1,13 +1,17 @@
-# numpy-transformer `(under development)`
-This is a numpy implementation of the Transformer model in `"Attention is All You Need"`, that runs at CPU
+# numpy-transformer
+## What it is?
+This is a numpy implementation of the Transformer model in original paper `"Attention is All You Need"`, that runs at CPU.
 
 <p align="center">
 <img src="images/The-Transformer-model-architecture.png" width=50% height=50%>
 </p>
 
-Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusProd/numpy-nn-model) repository
+Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusProd/numpy-nn-model) repository.
 
 Since the model is implemented at numpy, it runs on the CPU. Therefore, I have to set more gentle conditions for training the model. Otherwise CPU training will take **hundreds or thousands of hours**
+
+The model was trained on 10 epochs. On my machine, training one epoch takes 3-3.5 hours. Thus training of all epochs takes 32.5 hours.
+
 
 
 Example of translated sentences:
