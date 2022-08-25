@@ -89,7 +89,7 @@ Target sentence: ein teenager streckt sich in der küche und sein bauch ist teil
 Decoded sentence: ein älterer mann sitzt auf einem stuhl und isst <unk> <eos>  
 Target sentence: ein älterer mann sitzt in einem stuhl und isst ein paar snacks*  
 
-Attention plots:
+#### Attention plots:
 
 <p align="center">
 <img src="images/Figure_1.png" width=100% height=100%>
