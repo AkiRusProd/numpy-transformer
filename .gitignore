@@ -3,6 +3,6 @@
 *.de
 *.pyc
 *.pyo
-# *.pkl
-*saved models/*
-!saved models/seq2seq_model/
+*.pkl
+# *saved models/*
+# !saved models/seq2seq_model/
