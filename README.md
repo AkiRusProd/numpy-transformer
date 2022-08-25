@@ -62,6 +62,22 @@ Target sentence: ein teenager streckt sich in der küche und sein bauch ist teil
 Decoded sentence: ein älterer mann sitzt auf einem stuhl und isst <unk> <eos>  
 Target sentence: ein älterer mann sitzt in einem stuhl und isst ein paar snacks*  
 
+Attention plots:
+
+<p align="center">
+<img src="images/Figure_1.png" width=75% height=75%>
+</p>
+
+<p align="center">
+<img src="images/Figure_2.png" width=75% height=75%>
+</p>
+
+<p align="center">
+<img src="images/Figure_3.png" width=75% height=75%>
+</p>
+
+
+
 ### References:
  - https://arxiv.org/abs/1706.03762 - article "Attention is All You Need"
 
