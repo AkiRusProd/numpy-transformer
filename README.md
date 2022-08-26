@@ -11,7 +11,7 @@ Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusPro
 ## Training
 Since the model is implemented at numpy, it runs on the CPU. Therefore, I have to set more gentle conditions for training the model. Otherwise CPU training will take **hundreds or thousands of hours**
 
-The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 8 hours, but with GPU takes 2 minutes!!!! Thus training of all epochs takes 10 minutes.
+The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 8 hours, **but with GPU takes 2 minutes!!!! Thus training of all epochs takes 10 minutes**.
 
 ### Dataset:
 The dataset on which the model was trained is [Multi30k](https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/datasets/multi30k.html) dataset.
@@ -113,3 +113,4 @@ Target sentence: ein mann isst ein sandwich und hält seine kleine tochter auf d
 1) ~~add pretrained model (very soon)~~
 2) clean up and refactor code
 3) ~~add cupy realization (under development)~~
+4) add more power pretrained model (very soon)
