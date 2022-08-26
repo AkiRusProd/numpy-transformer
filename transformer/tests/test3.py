@@ -1,11 +1,11 @@
-# import sys, os
-# from pathlib import Path
-# sys.path[0] = str(Path(sys.path[0]).parent)
+import sys, os
+from pathlib import Path
+sys.path[0] = str(Path(sys.path[0]).parent)
 
 
 # import numpy as np
-# from transformer.losses import MSE, BinaryCrossEntropy, CategoricalCrossEntropy, CrossEntropy
-# from transformer.activations import Sigmoid, Softmax, ReLU, LogSoftmax
+from transformer.losses import MSE, BinaryCrossEntropy, CategoricalCrossEntropy, CrossEntropy
+from transformer.activations import Sigmoid, Softmax, ReLU, LogSoftmax
 # # class Softmax():
 
 # #     def forward(self, x):
@@ -183,3 +183,54 @@
 # # newfp = np.memmap(filename, dtype='float32', mode='r', shape=(3,4))
 # # print(newfp)
 # # print(filename)
+
+import numpy as np
+import cupy as cp
+
+
+# x_cpu = np.ones((1000,1000,1000))
+# x_gpu = cp.ones((1000,1000,1000))
+
+# logsoftmax = LogSoftmax()
+
+# shape = (2, 3, 10)
+
+# # x = np.arange(0, np.prod(shape)).reshape(shape)
+# x = np.random.normal(0, 1, shape)
+
+# x = logsoftmax.forward(x)
+# # print(x)
+# y = logsoftmax.jacobian_backward(x)  #gradient of x
+# print(y.shape)
+
+# y2 = logsoftmax.jacobian_opt_backward(x)  #gradient of x
+# print(y2.shape)
+
+# # print(y)
+# # print(y2)
+
+# print(np.allclose(y, y2))
+
+# print(np.equal(y, y2))
+
+softmax = Softmax()
+
+shape = (4, 2, 10, 5)
+
+# x = np.arange(0, np.prod(shape)).reshape(shape)
+x = np.random.normal(0, 1, shape)
+
+x = softmax.forward(x)
+# print(x)
+y = softmax.backward(x)  #gradient of x
+print(y.shape)
+
+y2 = softmax.backward_opt(x)  #gradient of x
+print(y2.shape)
+
+print(y)
+print(y2)
+
+print(np.allclose(y, y2))
+
+
