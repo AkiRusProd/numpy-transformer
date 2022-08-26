@@ -1,4 +1,11 @@
-import numpy as np
+try:
+    import cupy as np
+    is_cupy_available = True
+except:
+    import numpy as np
+    is_cupy_available = False
+
+
 from numba import njit
 
 """
@@ -67,8 +74,7 @@ class Softmax(Activation):
 
         batch_size = self.x.shape[0]
         softmax = self.forward(self.x)
-        
-        J = softmax[..., np.newaxis] * np.tile(np.identity(softmax.shape[-1], dtype = self.x.dtype), (softmax.shape[0], *np.ones(softmax.ndim, dtype = np.int8))) - (softmax[..., np.newaxis, :].transpose(*np.arange(0, softmax.ndim - 1, 1, dtype=np.int8), -1, -2) @ softmax[..., np.newaxis, :]) #np.matmul(softmax[:, :, None], softmax[:, None, :])
+        J = softmax[..., np.newaxis] * np.tile(np.identity(softmax.shape[-1], dtype = self.x.dtype), (softmax.shape[0], *tuple(np.ones(softmax.ndim, dtype = np.int8).tolist()))) - (softmax[..., np.newaxis, :].transpose(*tuple(np.arange(0, softmax.ndim - 1, 1, dtype=np.int8).tolist()), -1, -2) @ softmax[..., np.newaxis, :]) #np.matmul(softmax[:, :, None], softmax[:, None, :])
         input_grad =  grad[..., np.newaxis, :] @ J
         
         return input_grad.reshape(self.x.shape) / batch_size
@@ -148,37 +154,47 @@ class LogSoftmax(Activation):
         
     #     return input_grad.reshape(self.x.shape) / batch_size
 
-    def jacobian_backward(self, grad = None): #iterative variant
-        #https://stackoverflow.com/questions/35304393/trying-to-understand-code-that-computes-the-gradient-wrt-to-the-input-for-logsof
+    # def jacobian_backward(self, grad = None): #iterative variant
+    #     #https://stackoverflow.com/questions/35304393/trying-to-understand-code-that-computes-the-gradient-wrt-to-the-input-for-logsof
+    #     batch_size = self.x.shape[0]
+    #     softmax = self.softmax_forward(self.x)
+
+    #     input_grad =  np.zeros(grad.shape, dtype=self.x.dtype)
+        
+    #     # for i in range(grad.shape[1]): # for 1d array (1, D)
+    #     #     input_grad[:, i] = grad[:, i] - softmax[:, i] * grad[0, :].sum()
+
+    #     # for i in range(grad.shape[0]): # for 2d array (N, D)
+    #     #     for j in range(grad.shape[1]):
+    #     #         input_grad[i, j] = grad[i, j] - softmax[i, j] * grad[i, :].sum()
+
+    #     # for i in range(grad.shape[0]): #3d array (N, D1, D2)
+    #     #     for j in range(grad.shape[1]):
+    #     #         for k in range(grad.shape[2]):
+    #     #             input_grad[i, j, k] = grad[i, j, k] - softmax[i, j, k] * grad[i, j, :].sum()
+
+    #     input_grad = self.numba_jacobian_backward(grad, softmax, input_grad) #(N, D)
+    #     # input_grad = np.asarray(self.numba_jacobian_backward(np.asnumpy(grad), np.asnumpy(softmax), np.asnumpy(input_grad))) #(N, D)
+        
+    #     return input_grad / batch_size
+
+    # @staticmethod
+    # @njit
+    # def numba_jacobian_backward(grad, softmax, input_grad):
+    #     for i in range(grad.shape[0]): # for 2d array (N, D)
+    #         for j in range(grad.shape[1]):
+    #             input_grad[i, j] = grad[i, j] - softmax[i, j] * grad[i, :].sum()
+
+    #     return input_grad
+
+    def jacobian_backward(self, grad = None):
         batch_size = self.x.shape[0]
         softmax = self.softmax_forward(self.x)
 
-        input_grad =  np.zeros(grad.shape, dtype=self.x.dtype)
-        
-        # for i in range(grad.shape[1]): # for 1d array (1, D)
-        #     input_grad[:, i] = grad[:, i] - softmax[:, i] * grad[0, :].sum()
+        input_grad = grad - softmax * grad.sum(axis = self.axis, keepdims=True)
 
-        # for i in range(grad.shape[0]): # for 2d array (N, D)
-        #     for j in range(grad.shape[1]):
-        #         input_grad[i, j] = grad[i, j] - softmax[i, j] * grad[i, :].sum()
-
-        # for i in range(grad.shape[0]): #3d array (N, D1, D2)
-        #     for j in range(grad.shape[1]):
-        #         for k in range(grad.shape[2]):
-        #             input_grad[i, j, k] = grad[i, j, k] - softmax[i, j, k] * grad[i, j, :].sum()
-
-        input_grad = self.numba_jacobian_backward(grad, softmax, input_grad) #(N, D)
-        
         return input_grad / batch_size
 
-    @staticmethod
-    @njit
-    def numba_jacobian_backward(grad, softmax, input_grad):
-        for i in range(grad.shape[0]): # for 2d array (N, D)
-            for j in range(grad.shape[1]):
-                input_grad[i, j] = grad[i, j] - softmax[i, j] * grad[i, :].sum()
-
-        return input_grad
 
 
 
@@ -329,7 +345,7 @@ class Identity(Activation):
 
     def backward(self, grad):
         x = self.x
-        return grad * np.ones(x.shape).astype(x.dtype)
+        return np.asarray(grad * np.ones(x.shape).astype(x.dtype))
 
     
 activations= {

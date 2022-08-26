@@ -1,4 +1,3 @@
-import numpy as np
 from transformer.activations import ReLU
 from transformer.layers.base.dense import Dense
 from transformer.layers.base.dropout import Dropout

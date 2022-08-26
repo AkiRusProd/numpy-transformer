@@ -1,3 +1,4 @@
+cupy-cuda112==10.6.0
 matplotlib==3.5.3
 numba==0.56.0
 numpy==1.22.4

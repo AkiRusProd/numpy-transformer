@@ -1,4 +1,3 @@
-import numpy as np
 from transformer.layers.base.dropout import Dropout
 from transformer.layers.combined.self_attention import MultiHeadAttention
 from transformer.layers.combined.positionwise_feed_forward import PositionwiseFeedforward

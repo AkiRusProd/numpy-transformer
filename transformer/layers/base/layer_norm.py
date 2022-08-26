@@ -1,4 +1,10 @@
-import numpy as np
+try:
+    import cupy as np
+    is_cupy_available = True
+except:
+    import numpy as np
+    is_cupy_available = False
+
 
 
 class LayerNormalization():
@@ -62,7 +68,7 @@ class LayerNormalization():
 
             self.build()
   
-        self.normalized_axis = tuple(np.arange(self.input_data.ndim - self.gamma.ndim)) 
+        self.normalized_axis = tuple(np.arange(self.input_data.ndim - self.gamma.ndim).tolist())
         self.feature_size = self.gamma.size
         
         self.mean = np.mean(x_T, axis = 0)

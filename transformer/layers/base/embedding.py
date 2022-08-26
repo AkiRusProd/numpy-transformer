@@ -1,4 +1,9 @@
-import numpy as np
+try:
+    import cupy as np
+    is_cupy_available = True
+except:
+    import numpy as np
+    is_cupy_available = False
 
 
 class Embedding():
@@ -52,7 +57,7 @@ class Embedding():
     def forward(self, X):
         self.input_data = X # (batch_size, input_length); inputs: values of vocabulary from 0 to input_dim - 1
         
-        if not all([np.array_equal(len(self.input_data[0]), len(arr)) for arr in self.input_data]):
+        if not all([np.equal(len(self.input_data[0]), len(arr)).all() for arr in self.input_data]):
             raise ValueError("Input sequences must be of the same length")
 
         self.current_input_length = len(self.input_data[0])

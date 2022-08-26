@@ -1,4 +1,10 @@
 import numpy as np
+try: 
+    import cupy as cp
+    is_cupy_available = True
+except:
+    is_cupy_available = False
+
 from numba import njit
 
 
@@ -63,14 +69,31 @@ class Adam():
         self.beta = beta
         self.beta2 = beta2
         self.epsilon = epsilon
-       
 
+    #Temporary solution for the issue with cupy and njit
     def update(self, gradient, weights, v, m, v_hat, m_hat, t):
+        if is_cupy_available:
+            self._update = self._update_cupy
+        else:
+            self._update = self._update_numpy
+
         return self._update(self.alpha, self.beta, self.beta2, self.epsilon, gradient, weights, v, m, v_hat, m_hat, t)
 
     @staticmethod
     @njit
-    def _update(alpha, beta, beta2, epsilon, gradient, weights, v, m, v_hat, m_hat, t):
+    def _update_numpy(alpha, beta, beta2, epsilon, gradient, weights, v, m, v_hat, m_hat, t):
+        m = beta * m + (1 - beta) * gradient
+        v = beta2 * v + (1 - beta2) * np.power(gradient, 2)
+
+        m_hat = m / (1 - np.power(beta, t))
+        v_hat = v / (1 - np.power(beta2, t))
+
+        weights -= alpha * m_hat / (np.sqrt(v_hat) + epsilon)
+
+        return weights, v, m, v_hat, m_hat
+
+    @staticmethod
+    def _update_cupy(alpha, beta, beta2, epsilon, gradient, weights, v, m, v_hat, m_hat, t):
         m = beta * m + (1 - beta) * gradient
         v = beta2 * v + (1 - beta2) * np.power(gradient, 2)
 

@@ -1,4 +1,10 @@
-import numpy as np
+try:
+    import cupy as np
+    is_cupy_available = True
+except:
+    import numpy as np
+    is_cupy_available = False
+
 from transformer.layers.base.dense import Dense
 from transformer.layers.base.dropout import Dropout
 from transformer.activations import Sigmoid, Softmax
@@ -67,7 +73,7 @@ class MultiHeadAttention:
 
         energy = np.matmul(self.Q, self.K.transpose(0, 1, 3, 2)) / self.scale
 
-        self.mask = mask
+        self.mask = np.asarray(mask)
         if self.mask is not None:
             self.mask = self.mask[:, np.newaxis, ...]
             

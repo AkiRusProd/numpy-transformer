@@ -1,6 +1,6 @@
 # numpy-transformer
 ## What it is?
-This is a numpy implementation of the Transformer (Seq2Seq) model in original paper "Attention is All You Need", that runs at CPU.
+This is a numpy implementation of the Transformer (Seq2Seq) model in original paper "Attention is All You Need", that runs at CPU with numpy or GPU with cupy (very fast).
 
 <p align="center">
 <img src="images/The-Transformer-model-architecture.png" width=50% height=50%>
@@ -11,8 +11,8 @@ Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusPro
 ## Training
 Since the model is implemented at numpy, it runs on the CPU. Therefore, I have to set more gentle conditions for training the model. Otherwise CPU training will take **hundreds or thousands of hours**
 
-The model was trained for 10 epochs. On my machine, training one epoch takes 3-3.5 hours. Thus training of all epochs takes 32.5 hours.
-> **UPDATE**: Now training one epoch takes 2 hours with the same parameters.
+The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 8 hours, but with GPU takes 2 minutes!!!! Thus training of all epochs takes 10 minutes.
+
 ### Dataset:
 The dataset on which the model was trained is [Multi30k](https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/datasets/multi30k.html) dataset.
 To import this just run [extract_data.py](extract_data.py) script.
@@ -41,54 +41,54 @@ To import this just run [extract_data.py](extract_data.py) script.
 #### Examples of translated sentences of validation set:  
 
 >Example №1  
-*Input sentence: a man on his wedding day  
-Decoded sentence: ein mann <unk> an seinem tag <eos>  
-Target sentence: ein mann an seinem hochzeitstag*  
+*Input sentence: people sitting in a circle outside a large building  
+Decoded sentence: personen sitzen im freien vor einem großen gebäude <eos>  
+Target sentence: menschen die vor einem großen gebäude im kreis sitzen*  
 
 >Example №2  
-*Input sentence: a man with sunglasses is operating a construction automobile and releasing gravel on to the ground  
-Decoded sentence: ein mann mit sonnenbrille und sonnenbrille bedient einen <unk> mit <unk> <eos>  
-Target sentence: ein mann mit sonnenbrille bedient ein baufahrzeug und lädt kies auf den boden ab*  
+Input sentence: a woman sings in a club with a guitarist behind her  
+Decoded sentence: eine frau singt in einem club mit einem club <eos>  
+Target sentence: eine frau singt in einem klub mit einem gitarristen hinter ihr*  
 
 >Example №3  
-*Input sentence: two dogs play by a tree  
-Decoded sentence: zwei hunde spielen neben einem baum <eos>  
-Target sentence: zwei hunde spielen unter einem baum*  
+*Input sentence: construction workers having a discussion by the tracks  
+Decoded sentence: bauarbeiter diskutieren einige von den bahngleisen <eos>  
+Target sentence: arbeiter diskutieren neben den schiene*  
 
 >Example №4  
-*Input sentence: a man is standing by a group of video games in a bar  
-Decoded sentence: ein mann steht bei einer <unk> in einer <unk> bar <eos>  
-Target sentence: ein mann steht bei einigen spielautomaten in einer bar*  
+*Input sentence: a man with graying hair shaves his beard  
+Decoded sentence: ein bärtiger mann <unk> bart trägt <unk> <eos>  
+Target sentence: ein mann mit ergrauenden haaren rasiert seinen bart*  
 
 >Example №5  
-*Input sentence: a gloved hand holds what appears to be an oversize nail against a log  
-Decoded sentence: ein <unk> hält eine <unk> gegen die hand <unk> <unk> <unk> <eos>  
-Target sentence: eine hand mit handschuh hält einen übergroßen nagel gegen einen holzscheit*  
+*Input sentence: a man in a black shirt and jeans standing on the sidewalk looking at the camera  
+Decoded sentence: ein mann in einem schwarzen oberteil und jeans steht auf dem gehweg und blickt auf die kamera <eos>  
+Target sentence: ein mann in einem schwarzen hemd und jeans steht auf dem gehsteig und blickt in die kamera*  
 
 >Example №6  
-*Input sentence: a professionally dressed woman standing at a podium debating or discussing something of importance  
-Decoded sentence: eine <unk> gekleidete frau steht an einem podium und <unk> etwas <unk> <eos>  
-Target sentence: eine professionell gekleidete frau steht an einem podium und debattiert oder diskutiert über etwas wichtiges*  
+*Input sentence: a woman is laying down on a sofa laughing  
+Decoded sentence: eine frau liegt auf einem sofa und lacht <eos>  
+Target sentence: eine frau liegt auf einem sofa und lacht*  
 
 >Example №7  
-*Input sentence: two people are silhouetted against a lake reflecting a painted sky  
-Decoded sentence: zwei personen <unk> gegen einen see gegen einen see <unk> himmel <eos>  
-Target sentence: die silhouetten von zwei personen auf einem see der einen gemalten himmel reflektiert*  
+Input sentence: two males seem to be conversing while standing in front of a truck's back and behind a metal item while four people stand around them  
+Decoded sentence: vier personen stehen hinter ihnen unterhalten sich während hinter ihnen <unk> und hinter ihnen unterhalten und unterhalten und hinter ihnen stehen <eos>  
+Target sentence: zwei männer stehen vor dem heck eines lasters und hinter einem metallgegenstand und unterhalten sich anscheinend während vier weitere personen um sie herum stehen*  
 
 >Example №8  
-*Input sentence: a group of people on the street setting up instruments  
-Decoded sentence: eine gruppe von personen auf instrumenten <unk> auf der straße <eos>  
-Target sentence: eine gruppe von menschen baut auf der straße instrumente auf*  
+*Input sentence: two rockers are singing and playing on a dark stage  
+Decoded sentence: zwei <unk> singen und spielen auf einer bühne <eos>  
+Target sentence: zwei rocker singen und spielen auf einer dunklen bühne*  
 
 >Example №9  
-*Input sentence: a teenage boy is stretching in the kitchen and you can see part of his stomach  
-Decoded sentence: ein junge in einer küche streckt sich die <unk> eines <unk> und <unk> <unk> <eos>  
-Target sentence: ein teenager streckt sich in der küche und sein bauch ist teilweise sichtbar*  
+*Input sentence: a man fixing a little girl's bicycle  
+Decoded sentence: ein mann repariert ein kleines fahrrad <eos>  
+Target sentence: ein mann repariert das fahrrad eines kleinen mädchens*  
 
 >Example №10  
-*Input sentence: an elderly man sitting in a chair eating some snacks  
-Decoded sentence: ein älterer mann sitzt auf einem stuhl und isst <unk> <eos>  
-Target sentence: ein älterer mann sitzt in einem stuhl und isst ein paar snacks*  
+*Input sentence: a man eating a sandwich with his baby daughter in his lap  
+Decoded sentence: ein mann isst ein baby auf seiner tochter ein sandwich <eos>  
+Target sentence: ein mann isst ein sandwich und hält seine kleine tochter auf dem schoß*  
 
 #### Attention plots:
 
@@ -104,8 +104,6 @@ Target sentence: ein älterer mann sitzt in einem stuhl und isst ein paar snacks
 <img src="images/Figure_3.png" width=100% height=100%>
 </p>
 
-## Training problems and improvements
-To improve a results of the model, you need to increase batch size, number of epochs and decrease the minimum word frequency from 10 to at least 2. However, since the model runs on a processor, such training is impossible because there is not enough CPU and RAM power for extremely large arrays to train this model with satisfactory time. Any ideas are welcome.
 
 
 ### References:
@@ -114,4 +112,4 @@ To improve a results of the model, you need to increase batch size, number of ep
 ### TODO:
 1) ~~add pretrained model (very soon)~~
 2) clean up and refactor code
-3) add cupy realization (under development)
+3) ~~add cupy realization (under development)~~

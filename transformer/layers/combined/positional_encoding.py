@@ -1,4 +1,10 @@
-import numpy as np
+try:
+    import cupy as np
+    is_cupy_available = True
+except:
+    import numpy as np
+    is_cupy_available = False
+
 from transformer.layers.base.dropout import Dropout
 
 

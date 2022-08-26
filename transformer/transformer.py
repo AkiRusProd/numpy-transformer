@@ -4,6 +4,14 @@ sys.path[0] = str(Path(sys.path[0]).parent)
 
 
 import numpy as np
+try: 
+    import cupy as cp
+    is_cupy_available = True
+    print('Cupy is available. Using Cupy for all computations.')
+except:
+    is_cupy_available = False
+    print('CuPy is not available. Switching to NumPy.')
+    
 import pickle as pkl
 from tqdm import tqdm
 from transformer.modules import Encoder
@@ -16,7 +24,7 @@ import matplotlib.pyplot as plt
 
 
 DATA_TYPE = np.float32
-BATCH_SIZE = 8
+BATCH_SIZE = 32
 
 PAD_TOKEN = '<pad>'
 SOS_TOKEN = '<sos>'
@@ -36,7 +44,7 @@ data_preparator = DataPreparator(tokens, indexes)
 train_data, test_data, val_data = data_preparator.prepare_data(
                     path = 'dataset/', 
                     batch_size = BATCH_SIZE, 
-                    min_freq = 10)
+                    min_freq = 2)
 
 source, target = train_data
 
@@ -152,7 +160,10 @@ class Seq2Seq():
                     )
 
                 if batch_num == (len(source) - 1):
-                    epoch_loss = np.mean(loss_history[(epoch) * len(source) : (epoch + 1) * len(source) ])
+                    if is_cupy_available:
+                        epoch_loss = cp.mean(cp.array(loss_history[(epoch) * len(source) : (epoch + 1) * len(source) ]))
+                    else:
+                        epoch_loss = np.mean(loss_history[(epoch) * len(source) : (epoch + 1) * len(source) ])
 
                     tqdm_range.set_description(
                             f"training | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f} | epoch {epoch + 1}/{epochs}"
@@ -299,8 +310,12 @@ def plot_attention(sentence, translation, attention, heads_num = 8, rows_num = 2
         
         ax = fig.add_subplot(rows_num, cols_num, h + 1)
         ax.set_xlabel(f'Head {h + 1}')
+        
+        if is_cupy_available:
+            ax.matshow(cp.asnumpy(attention[h]), cmap = 'inferno')
+        else:
+            ax.matshow(attention[h], cmap = 'inferno')
 
-        ax.matshow(attention[h], cmap = 'inferno')
         ax.tick_params(labelsize = 7)
 
         ax.set_xticks(range(len(sentence)))

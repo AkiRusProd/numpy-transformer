@@ -1,5 +1,10 @@
-import numpy as np
-from transformer.activations import  *
+try:
+    import cupy as np
+    is_cupy_available = True
+except:
+    import numpy as np
+    is_cupy_available = False
+
 
 
 class Dense():
