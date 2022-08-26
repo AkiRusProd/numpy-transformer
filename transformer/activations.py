@@ -74,6 +74,7 @@ class Softmax(Activation):
         return input_grad.reshape(self.x.shape) / batch_size
 
     # def backward_iter(self, grad = None): #iterative variant
+    #     #https://stackoverflow.com/questions/33541930/how-to-implement-the-softmax-derivative-independently-from-any-loss-function
     #     batch_size = self.x.shape[0]
     #     softmax = self.forward(self.x)
 
@@ -148,6 +149,7 @@ class LogSoftmax(Activation):
     #     return input_grad.reshape(self.x.shape) / batch_size
 
     def jacobian_backward(self, grad = None): #iterative variant
+        #https://stackoverflow.com/questions/35304393/trying-to-understand-code-that-computes-the-gradient-wrt-to-the-input-for-logsof
         batch_size = self.x.shape[0]
         softmax = self.softmax_forward(self.x)
 
