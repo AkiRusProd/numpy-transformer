@@ -114,4 +114,4 @@ To improve a results of the model, you need to increase batch size, number of ep
 ### TODO:
 1) ~~add pretrained model (very soon)~~
 2) clean up and refactor code
-
+3) add cupy realization (under development)
