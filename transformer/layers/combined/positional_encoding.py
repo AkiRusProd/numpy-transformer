@@ -13,8 +13,6 @@ class PositionalEncoding():
         self.max_len = max_len
 
         self.data_type = data_type
-
-        # self.dropout = Dropout(dropout_rate)
  
         pe = np.zeros((max_len, d_model))  # (max_len, d_model)
         position = np.arange(0, max_len)[:, np.newaxis]# (max_len, 1)
@@ -30,7 +28,6 @@ class PositionalEncoding():
         """ x: (batch_size, seq_len, d_model)
         """
         x = x + self.pe[:x.shape[0], :]  # (batch_size, seq_len, d_model)
-        # x = self.dropout.forward(x)  # (batch_size, seq_len, d_model)
 
         # x: (batch_size, seq_len, d_model)
         return x

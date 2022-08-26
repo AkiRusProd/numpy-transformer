@@ -60,8 +60,6 @@ class Dense():
 
     def forward(self, X, training = True): 
         self.input_data = X
-        # if len(X.shape) == 3 and X.shape[1] == 1:
-        #     self.input_data = self.input_data.reshape(X.shape[0], X.shape[2])
        
         self.batch_size = len(self.input_data)
 

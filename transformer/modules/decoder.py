@@ -11,7 +11,6 @@ from transformer.layers.combined.positional_encoding import PositionalEncoding
 
 class Decoder:
     def __init__(self, trg_vocab_size, heads_num, layers_num, d_model, d_ff, dropout, max_length = 5000, data_type = np.float32):
-        # super(Decoder, self).__init__()
 
         self.token_embedding    = Embedding(trg_vocab_size, d_model, data_type)
         self.position_embedding = PositionalEncoding(max_length, d_model, dropout, data_type)
@@ -54,8 +53,7 @@ class Decoder:
         for layer in reversed(self.layers):
             error, ecn_error = layer.backward(error)
             self.encoder_error += ecn_error
-        # print("IN DECODER TO ENCODER ERROR", error.shape)
-        # self.encoder_error = error
+
 
         error = self.dropout.backward(error)
 

@@ -44,10 +44,8 @@ class MultiHeadAttention:
 
         return x.reshape(batch_size, -1, self.heads_num, self.d_k).transpose(0, 2, 1, 3)
         
-    #FORWARD OK 
 
     def forward(self, query, key, value, mask, training = True):
-        batch_size = key.shape[0]
         
         self.key_len, self.query_len, self.value_len = key.shape[1], query.shape[1], value.shape[1]
 
@@ -58,8 +56,7 @@ class MultiHeadAttention:
         K = self.K_linear.forward(key)
         Q = self.Q_linear.forward(query)
         V = self.V_linear.forward(value)
-        # print(K.shape, Q.shape, V.shape)
-        # # split heads_num not equal splits
+
         # self.K = K.reshape(batch_size, self.heads_num, self.key_len, self.d_k)
         # self.Q = Q.reshape(batch_size, self.heads_num, self.query_len, self.d_q)
         # self.V = V.reshape(batch_size, self.heads_num, self.value_len, self.d_v)
@@ -67,15 +64,15 @@ class MultiHeadAttention:
         self.Q = self.split_heads_forward(Q)
         self.V = self.split_heads_forward(V)
 
-        # print(Q.shape, K.shape)
+
         energy = np.matmul(self.Q, self.K.transpose(0, 1, 3, 2)) / self.scale
 
         self.mask = mask
         if self.mask is not None:
             self.mask = self.mask[:, np.newaxis, ...]
-            # print(energy.shape, mask.shape, query_len, key_len)
+            
             energy = np.where(self.mask == 0, float('-inf'), energy)#float("-1e20")
-        # print(energy.shape)
+
         attention = self.activation.forward(energy)
 
         self.dropout_attention = self.dropout.forward(attention, training)
@@ -116,7 +113,7 @@ class MultiHeadAttention:
         V_error = self.split_heads_backward(V_error)
         Q_error = self.split_heads_backward(Q_error)
         K_error = self.split_heads_backward(K_error)
-        # print(np.equal(V_error, V_error_alter).all())
+
 
 
 
