@@ -11,7 +11,7 @@ Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusPro
 ## Training
 Since the model is implemented at numpy, it runs on the CPU. Therefore, I have to set more gentle conditions for training the model. Otherwise CPU training will take **hundreds or thousands of hours**
 
-The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 8 hours, **but with GPU takes 2 minutes!!!! Thus training of all epochs takes 10 minutes**.
+The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 8 hours, **but with GPU takes 2 minutes!!!! Thus training of all epochs takes 20 minutes**.
 
 ### Dataset:
 The dataset on which the model was trained is [Multi30k](https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/datasets/multi30k.html) dataset.
