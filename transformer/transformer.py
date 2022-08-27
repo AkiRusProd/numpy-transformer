@@ -212,7 +212,7 @@ class Seq2Seq():
             val_loss_history.append(self._evaluate(val_source, val_target))
 
 
-            if (save_path is not None) and (epoch % save_every_epochs == 0):
+            if (save_path is not None) and ((epoch + 1) % save_every_epochs == 0):
                 self.save(save_path + f'/{epoch}')
                 
         return train_loss_history, val_loss_history
