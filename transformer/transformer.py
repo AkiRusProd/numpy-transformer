@@ -181,7 +181,7 @@ class Seq2Seq():
             loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].astype(np.int32).flatten()).mean())
             
             tqdm_range.set_description(
-                    f"testing | loss: {loss_history[-1]:.7f} | perplexity: {np.exp(loss_history[-1]):.7f}"
+                    f"testing  | loss: {loss_history[-1]:.7f} | perplexity: {np.exp(loss_history[-1]):.7f}"
                 )
 
             if batch_num == (len(source) - 1):
@@ -191,14 +191,16 @@ class Seq2Seq():
                     epoch_loss = np.mean(loss_history)
 
                 tqdm_range.set_description(
-                        f"testing | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f}"
+                        f"testing  | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f}"
                 )
 
         return epoch_loss
 
 
-    def fit(self, train_data, val_data, epochs, save_every_epochs, save_path = None):
+    def fit(self, train_data, val_data, epochs, save_every_epochs, save_path = None, validation_check = False):
         self.set_optimizer()
+
+        best_val_loss = float('inf')
         
         train_loss_history = []
         val_loss_history = []
@@ -213,7 +215,15 @@ class Seq2Seq():
 
 
             if (save_path is not None) and ((epoch + 1) % save_every_epochs == 0):
-                self.save(save_path + f'/{epoch}')
+                if validation_check == False:
+                    self.save(save_path + f'/{epoch + 1}')
+                else:
+                    if val_loss_history[-1] < best_val_loss:
+                        best_val_loss = val_loss_history[-1]
+                        
+                        self.save(save_path + f'/{epoch + 1}')
+                    else:
+                        print(f'Current validation loss is higher than previous; Not saved')
                 
         return train_loss_history, val_loss_history
 
@@ -254,12 +264,12 @@ class Seq2Seq():
 
 INPUT_DIM = len(train_data_vocabs[0])
 OUTPUT_DIM = len(train_data_vocabs[1])
-HID_DIM = 512  #512 in original paper
-ENC_LAYERS = 6 #6 in original paper
-DEC_LAYERS = 6 #6 in original paper
+HID_DIM = 256  #512 in original paper
+ENC_LAYERS = 3 #6 in original paper
+DEC_LAYERS = 3 #6 in original paper
 ENC_HEADS = 8
 DEC_HEADS = 8
-FF_SIZE = 2048  #2048 in original paper
+FF_SIZE = 512  #2048 in original paper
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
@@ -274,7 +284,7 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 model = Seq2Seq(encoder, decoder, PAD_INDEX)
 
 
-# model.load("saved models/seq2seq_model/0")
+model.load("saved models/seq2seq_model/0")
 
 
 model.compile(
@@ -287,7 +297,7 @@ model.compile(
                 , loss_function = CrossEntropy(ignore_index=PAD_INDEX)
             )
 train_loss_history, val_loss_history = None, None
-train_loss_history, val_loss_history = model.fit(train_data, val_data, epochs = 30, save_every_epochs = 5, save_path = "saved models/seq2seq_model")# "saved models/seq2seq_model"
+# train_loss_history, val_loss_history = model.fit(train_data, val_data, epochs = 30, save_every_epochs = 5, save_path = "saved models/seq2seq_model", validation_check = True)# "saved models/seq2seq_model"
 
 
 def plot_loss_history(train_loss_history, val_loss_history):
