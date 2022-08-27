@@ -7,7 +7,7 @@ import numpy as np
 try: 
     import cupy as cp
     is_cupy_available = True
-    print('Cupy is available. Using Cupy for all computations.')
+    print('CuPy is available. Using CuPy for all computations.')
 except:
     is_cupy_available = False
     print('CuPy is not available. Switching to NumPy.')
@@ -135,47 +135,40 @@ class Seq2Seq():
         self.encoder.update_weights()
         self.decoder.update_weights()
 
-
-    def fit(self, source, target, epochs, save_every_epochs, save_path = None):
-        self.set_optimizer()
-        
+    def _train(self, source, target, epoch, epochs):
         loss_history = []
-        for epoch in range(epochs):
-            tqdm_range = tqdm(enumerate(zip(source, target)), total = len(source))
-            for batch_num, (source_batch, target_batch) in tqdm_range:
-                
-                output, attention = self.forward(source_batch, target_batch[:,:-1], training = True)
-               
-                _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
+        
+        tqdm_range = tqdm(enumerate(zip(source, target)), total = len(source))
+        for batch_num, (source_batch, target_batch) in tqdm_range:
+            
+            output, attention = self.forward(source_batch, target_batch[:,:-1], training = True)
+            
+            _output = output.reshape(output.shape[0] * output.shape[1], output.shape[2])
 
-                loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].astype(np.int32).flatten()).mean())#[:, np.newaxis]
-                error = self.loss_function.derivative(_output, target_batch[:, 1:].astype(np.int32).flatten())#[:, np.newaxis]
+            loss_history.append(self.loss_function.loss(_output, target_batch[:, 1:].astype(np.int32).flatten()).mean())#[:, np.newaxis]
+            error = self.loss_function.derivative(_output, target_batch[:, 1:].astype(np.int32).flatten())#[:, np.newaxis]
 
 
-                self.backward(error.reshape(output.shape))
-                self.update_weights()
+            self.backward(error.reshape(output.shape))
+            self.update_weights()
+
+            tqdm_range.set_description(
+                    f"training | loss: {loss_history[-1]:.7f} | perplexity: {np.exp(loss_history[-1]):.7f} | epoch {epoch + 1}/{epochs}" #loss: {loss:.4f}
+                )
+
+            if batch_num == (len(source) - 1):
+                if is_cupy_available:
+                    epoch_loss = cp.mean(cp.array(loss_history))
+                else:
+                    epoch_loss = np.mean(loss_history)
 
                 tqdm_range.set_description(
-                        f"training | loss: {loss_history[-1]:.7f} | perplexity: {np.exp(loss_history[-1]):.7f} | epoch {epoch + 1}/{epochs}" #loss: {loss:.4f}
-                    )
+                        f"training | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f} | epoch {epoch + 1}/{epochs}"
+                )
 
-                if batch_num == (len(source) - 1):
-                    if is_cupy_available:
-                        epoch_loss = cp.mean(cp.array(loss_history[(epoch) * len(source) : (epoch + 1) * len(source) ]))
-                    else:
-                        epoch_loss = np.mean(loss_history[(epoch) * len(source) : (epoch + 1) * len(source) ])
+        return epoch_loss
 
-                    tqdm_range.set_description(
-                            f"training | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f} | epoch {epoch + 1}/{epochs}"
-                    )
-
-            if (save_path is not None) and (epoch % save_every_epochs == 0):
-                self.save(save_path + f'/{epoch}')
-                
-        return loss_history
-
-
-    def evaluate(self, source, target):
+    def _evaluate(self, source, target):
         loss_history = []
 
         tqdm_range = tqdm(enumerate(zip(source, target)), total = len(source))
@@ -192,13 +185,40 @@ class Seq2Seq():
                 )
 
             if batch_num == (len(source) - 1):
-                epoch_loss = np.mean(loss_history)
+                if is_cupy_available:
+                    epoch_loss = cp.mean(cp.array(loss_history))
+                else:
+                    epoch_loss = np.mean(loss_history)
 
                 tqdm_range.set_description(
                         f"testing | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f}"
                 )
 
-        return loss_history
+        return epoch_loss
+
+
+    def fit(self, train_data, val_data, epochs, save_every_epochs, save_path = None):
+        self.set_optimizer()
+        
+        train_loss_history = []
+        val_loss_history = []
+
+        train_source, train_target = train_data
+        val_source, val_target = val_data
+
+        for epoch in range(epochs):
+
+            train_loss_history.append(self._train(train_source, train_target, epoch, epochs))
+            val_loss_history.append(self._evaluate(val_source, val_target))
+
+
+            if (save_path is not None) and (epoch % save_every_epochs == 0):
+                self.save(save_path + f'/{epoch}')
+                
+        return train_loss_history, val_loss_history
+
+
+
 
     def predict(self, sentence, vocabs, max_length = 50):
 
@@ -234,12 +254,12 @@ class Seq2Seq():
 
 INPUT_DIM = len(train_data_vocabs[0])
 OUTPUT_DIM = len(train_data_vocabs[1])
-HID_DIM = 256  #512 in original paper
-ENC_LAYERS = 3 #6 in original paper
-DEC_LAYERS = 3 #6 in original paper
+HID_DIM = 512  #512 in original paper
+ENC_LAYERS = 6 #6 in original paper
+DEC_LAYERS = 6 #6 in original paper
 ENC_HEADS = 8
 DEC_HEADS = 8
-FF_SIZE = 512  #2048 in original paper
+FF_SIZE = 2048  #2048 in original paper
 ENC_DROPOUT = 0.1
 DEC_DROPOUT = 0.1
 
@@ -254,7 +274,7 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 model = Seq2Seq(encoder, decoder, PAD_INDEX)
 
 
-model.load("saved models/seq2seq_model/0")
+# model.load("saved models/seq2seq_model/0")
 
 
 model.compile(
@@ -266,18 +286,21 @@ model.compile(
                             ) 
                 , loss_function = CrossEntropy(ignore_index=PAD_INDEX)
             )
-# loss_history = model.fit(source, target, epochs = 10, save_every_epochs = 1, save_path = "saved models/seq2seq_model")
+train_loss_history, val_loss_history = None, None
+train_loss_history, val_loss_history = model.fit(train_data, val_data, epochs = 30, save_every_epochs = 5, save_path = "saved models/seq2seq_model")# "saved models/seq2seq_model"
 
 
-def plot_loss_history(loss_history):
-    plt.plot(loss_history)
+def plot_loss_history(train_loss_history, val_loss_history):
+    plt.plot(train_loss_history)
+    plt.plot(val_loss_history)
     plt.title('Loss history')
-    plt.xlabel('Steps')
     plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['train', 'val'], loc='upper left')
     plt.show()
         
-
-# plot_loss_history(loss_history)
+if train_loss_history is not None and val_loss_history is not None:
+    plot_loss_history(train_loss_history, val_loss_history)
 
 
 
