@@ -9,8 +9,6 @@ This is a fast numpy implementation of the Transformer (Seq2Seq) model in origin
 Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusProd/numpy-nn-model) repository.
 
 ## Training
-Since the model is implemented at numpy, it runs on the CPU. Therefore, I have to set more gentle conditions for training the model. Otherwise CPU training will take **hundreds or thousands of hours**
-
 The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 3 hours, **but with GPU takes 2 minutes!!!! Thus training of all epochs takes 20 minutes**.
 
 ### Dataset:
