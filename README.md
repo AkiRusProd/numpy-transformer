@@ -71,7 +71,7 @@ Decoded sentence: eine frau liegt auf einem sofa und lacht <eos>
 Target sentence: eine frau liegt auf einem sofa und lacht*  
 
 >Example №7  
-Input sentence: two males seem to be conversing while standing in front of a truck's back and behind a metal item while four people stand around them  
+*Input sentence: two males seem to be conversing while standing in front of a truck's back and behind a metal item while four people stand around them  
 Decoded sentence: vier personen stehen hinter ihnen unterhalten sich während hinter ihnen <unk> und hinter ihnen unterhalten und unterhalten und hinter ihnen stehen <eos>  
 Target sentence: zwei männer stehen vor dem heck eines lasters und hinter einem metallgegenstand und unterhalten sich anscheinend während vier weitere personen um sie herum stehen*  
 
