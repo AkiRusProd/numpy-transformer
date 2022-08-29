@@ -27,9 +27,7 @@ class Encoder:
         self.scale = np.sqrt(d_model).astype(data_type) 
 
     def forward(self, src, src_mask, training):
-        # batchsize, seq_length = src.shape
-        # positions = np.tile(np.arange(0, seq_length), (batchsize, 1))
-        # src = self.dropout.forward((self.token_embedding.forward(src) * self.scale + self.position_embedding.forward(positions)))
+       
         src = self.token_embedding.forward(src) * self.scale
         src = self.position_embedding.forward(src)
         src = self.dropout.forward(src, training)
@@ -62,11 +60,3 @@ class Encoder:
         for layer in self.layers:
             layer_num = layer.update_weights(layer_num)
 
-
-# import torch
-# # positions = torch.arange(0, 10).unsqueeze(0).repeat(30, 1)
-# positions = torch.arange(0, 10).expand(30, 10)
-# print(positions.shape)
-# positions = np.tile(np.arange(0, 10), (30, 1))
-
-# print(positions.shape)

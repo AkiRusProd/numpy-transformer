@@ -14,11 +14,22 @@ class SGD():
         self.alpha = alpha
 
     def update(self, gradient, weights, v, m, v_hat, m_hat, _):
+        if is_cupy_available:
+            self._update = self._update_cupy
+        else:
+            self._update = self._update_numpy
+
         return self._update(self.alpha, gradient, weights, v, m, v_hat, m_hat)
 
     @staticmethod
     @njit
-    def _update(alpha, gradient, weights, v, m, v_hat, m_hat):
+    def _update_numpy(alpha, gradient, weights, v, m, v_hat, m_hat):
+        weights -= gradient * alpha
+
+        return weights, v, m, v_hat, m_hat
+
+    @staticmethod
+    def _update_cupy(alpha, gradient, weights, v, m, v_hat, m_hat):
         weights -= gradient * alpha
 
         return weights, v, m, v_hat, m_hat
@@ -33,11 +44,23 @@ class Momentum():
         self.beta = beta
 
     def update(self, gradient, weights, v, m, v_hat, m_hat, _):
+        if is_cupy_available:
+            self._update = self._update_cupy
+        else:
+            self._update = self._update_numpy
+
         return self._update(self.alpha, self.beta, gradient, weights, v, m, v_hat, m_hat)
 
     @staticmethod
     @njit
-    def _update(alpha, beta, gradient, weights, v, m, v_hat, m_hat):
+    def _update_numpy(alpha, beta, gradient, weights, v, m, v_hat, m_hat):
+        v = beta * v + (1 - beta) * gradient
+        weights -= v * alpha
+
+        return weights, v, m, v_hat, m_hat
+
+    @staticmethod
+    def _update_cupy(alpha, beta, gradient, weights, v, m, v_hat, m_hat):
         v = beta * v + (1 - beta) * gradient
         weights -= v * alpha
 
@@ -52,11 +75,23 @@ class RMSProp():
         self.epsilon = epsilon
 
     def update(self, gradient, weights, v, m, v_hat, m_hat, _):
+        if is_cupy_available:
+            self._update = self._update_cupy
+        else:
+            self._update = self._update_numpy
+
         return self._update(self.alpha, self.beta, self.epsilon, gradient, weights, v, m, v_hat, m_hat)
 
     @staticmethod
     @njit
-    def _update(alpha, beta, epsilon, gradient, weights, v, m, v_hat, m_hat):
+    def _update_numpy(alpha, beta, epsilon, gradient, weights, v, m, v_hat, m_hat):
+        v = beta * v + (1 - beta) * np.power(gradient, 2)
+        weights -= alpha * gradient / (np.sqrt(v) + epsilon)
+
+        return weights, v, m, v_hat, m_hat
+
+    @staticmethod
+    def _update_cupy(alpha, beta, epsilon, gradient, weights, v, m, v_hat, m_hat):
         v = beta * v + (1 - beta) * np.power(gradient, 2)
         weights -= alpha * gradient / (np.sqrt(v) + epsilon)
 
@@ -114,12 +149,30 @@ class Nadam():
         
 
     def update(self, gradient, weights, v, m, v_hat, m_hat, t):
+        if is_cupy_available:
+            self._update = self._update_cupy
+        else:
+            self._update = self._update_numpy
      
         return self._update(self.alpha, self.beta, self.beta2, self.epsilon, gradient, weights, v, m, v_hat, m_hat, t)
 
     @staticmethod
     @njit
-    def _update(alpha, beta, beta2, epsilon, gradient, weights, v, m, v_hat, m_hat, t):
+    def _update_numpy(alpha, beta, beta2, epsilon, gradient, weights, v, m, v_hat, m_hat, t):
+        m = beta * m + (1 - beta) * gradient
+        v = beta2 * v + (1 - beta2) * np.power(gradient, 2)
+
+        m_hat = m / (1 - np.power(beta, t)) + (1 - beta) * gradient / (
+            1 - np.power(beta, t)
+        )
+        v_hat = v / (1 - np.power(beta2, t))
+
+        weights -= alpha * m_hat / (np.sqrt(v_hat) + epsilon)
+
+        return weights, v, m, v_hat, m_hat
+
+    @staticmethod
+    def _update_cupy(alpha, beta, beta2, epsilon, gradient, weights, v, m, v_hat, m_hat, t):
         m = beta * m + (1 - beta) * gradient
         v = beta2 * v + (1 - beta2) * np.power(gradient, 2)
 

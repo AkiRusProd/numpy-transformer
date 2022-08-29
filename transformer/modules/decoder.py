@@ -33,9 +33,7 @@ class Decoder:
 
 
     def forward(self, trg, trg_mask, src, src_mask, training):
-        # batchsize, seq_length = trg.shape
-        # positions = np.tile(np.arange(0, seq_length), (batchsize, 1))
-        # trg = self.dropout.forward((self.token_embedding.forward(trg) * self.scale + self.position_embedding.forward(positions)))
+        
         trg = self.token_embedding.forward(trg) * self.scale
         trg = self.position_embedding.forward(trg)
         trg = self.dropout.forward(trg, training)
