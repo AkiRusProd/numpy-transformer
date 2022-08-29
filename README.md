@@ -45,7 +45,7 @@ Decoded sentence: personen sitzen im freien vor einem großen gebäude <eos>
 Target sentence: menschen die vor einem großen gebäude im kreis sitzen*  
 
 >Example №2  
-Input sentence: a woman sings in a club with a guitarist behind her  
+*Input sentence: a woman sings in a club with a guitarist behind her  
 Decoded sentence: eine frau singt in einem club mit einem club <eos>  
 Target sentence: eine frau singt in einem klub mit einem gitarristen hinter ihr*  
 
