@@ -9,7 +9,8 @@ This is a fast numpy implementation of the Transformer (Seq2Seq) model in origin
 Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusProd/numpy-nn-model) repository.
 
 ## Training
-The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 3 hours, **but with GPU takes 2 minutes!!!! Thus training of all epochs takes 20 minutes**.
+The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 3 hours, **but with GPU takes 2 minutes!!!! Thus training of all epochs takes 20 minutes**.  
+**Note:** You can`t open pre-trained model if CuPy is not installed, because this model was trained on GPU.
 
 ### Dataset:
 The dataset on which the model was trained is [Multi30k](https://pytorchnlp.readthedocs.io/en/latest/_modules/torchnlp/datasets/multi30k.html) dataset.
