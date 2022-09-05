@@ -187,7 +187,7 @@ class LogSoftmax(Activation):
 
     #     return input_grad
 
-    def jacobian_backward(self, grad = None):
+    def backward(self, grad = None):
         batch_size = self.x.shape[0]
         softmax = self.softmax_forward(self.x)
 

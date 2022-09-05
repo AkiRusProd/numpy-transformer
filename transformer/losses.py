@@ -69,7 +69,7 @@ class CrossEntropy():
         err = 1/batch_size
         nll_loss_der = -1 * np.where(np.isin(y, y[np.arange(len(t)), t]), err, 0).astype(y.dtype)
        
-        output_err = self.log_softmax.jacobian_backward(nll_loss_der)
+        output_err = self.log_softmax.backward(nll_loss_der)
         
         return np.where(t.reshape(-1, 1) == self.ignore_index, 0, output_err)
 

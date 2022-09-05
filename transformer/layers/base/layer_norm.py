@@ -60,8 +60,6 @@ class LayerNormalization():
     def forward(self, X):
         self.input_data = X
         x_T = self.input_data.T
-        
-        # if self.feature_size is None: self.feature_size = np.prod(x_T.shape[:-1]) #x_T.shape[0]
 
         if self.normalized_shape is None:
             self.normalized_shape = self.input_data.shape[1:]

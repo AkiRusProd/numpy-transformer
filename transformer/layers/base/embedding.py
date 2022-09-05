@@ -39,10 +39,6 @@ class Embedding():
         self.v, self.m         = np.zeros_like(self.w).astype(self.data_type), np.zeros_like(self.w).astype(self.data_type)
         self.v_hat, self.m_hat = np.zeros_like(self.w).astype(self.data_type), np.zeros_like(self.w).astype(self.data_type)
 
-        # if self.input_length is not None:
-        #     self.output_shape = (self.input_length, self.output_dim)
-        # else:
-        #     print("Input_length is not set, can`t compute output_shape of the Embedding layer")
 
     #one hot encoding
     def prepare_labels(self, batch_labels):
@@ -70,7 +66,6 @@ class Embedding():
         return self.output_data
 
     def backward(self, error):        
-        # self.grad_w = np.dot(np.transpose(self.input_data, axes = (0, 2, 1)), error).sum(axis = 0).sum(axis = 1).reshape(self.w.shape)
         self.grad_w = np.matmul(np.transpose(self.input_data, axes = (0, 2, 1)), error).sum(axis = 0)
 
         # output_error = np.dot(error, self.w.T)

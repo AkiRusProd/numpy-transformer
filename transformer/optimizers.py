@@ -105,7 +105,6 @@ class Adam():
         self.beta2 = beta2
         self.epsilon = epsilon
 
-    #Temporary solution for the issue with cupy and njit
     def update(self, gradient, weights, v, m, v_hat, m_hat, t):
         if is_cupy_available:
             self._update = self._update_cupy
