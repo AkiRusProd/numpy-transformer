@@ -1,1 +1,0 @@
-For training model you need to run the extract_data script which downloads and unpacks the Multi30k dataset - dataset of English and German language sentences.

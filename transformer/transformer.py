@@ -166,7 +166,7 @@ class Seq2Seq():
                         f"training | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f} | epoch {epoch + 1}/{epochs}"
                 )
 
-        return epoch_loss
+        return epoch_loss.get() if is_cupy_available else epoch_loss
 
     def _evaluate(self, source, target):
         loss_history = []
@@ -194,7 +194,7 @@ class Seq2Seq():
                         f"testing  | avg loss: {epoch_loss:.7f} | avg perplexity: {np.exp(epoch_loss):.7f}"
                 )
 
-        return epoch_loss
+        return epoch_loss.get() if is_cupy_available else epoch_loss
 
 
     def fit(self, train_data, val_data, epochs, save_every_epochs, save_path = None, validation_check = False):
@@ -283,8 +283,10 @@ decoder = Decoder(OUTPUT_DIM, DEC_HEADS, DEC_LAYERS, HID_DIM, FF_SIZE, DEC_DROPO
 
 model = Seq2Seq(encoder, decoder, PAD_INDEX)
 
-
-model.load("saved models/seq2seq_model/0")
+try:
+    model.load("saved models/seq2seq_model/0")
+except:
+    print("Can't load saved model state")
 
 
 model.compile(
