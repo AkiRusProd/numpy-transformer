@@ -19,6 +19,7 @@ class Dropout():
 
     def __init__(self, rate = 0.1, data_type = np.float32) -> None:
         self.rate = rate
+        self.scale = 1.0 / (1.0 - rate)
         self.input_shape = None
 
         self.data_type = data_type
@@ -35,8 +36,8 @@ class Dropout():
                         size = X.shape,
                     ).astype(self.data_type)
 
-        return X * self.mask
+        return X * self.mask * self.scale
 
     def backward(self, error):
 
-        return error * self.mask
+        return error * self.mask * self.scale
