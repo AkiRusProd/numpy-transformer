@@ -1,5 +1,5 @@
 # numpy-transformer
-## What it is?
+## What is this?
 This is a fast numpy implementation of the Transformer (Seq2Seq) model in original paper "Attention is All You Need", that runs at CPU with numpy or GPU with cupy (very fast).
 
 <p align="center">
