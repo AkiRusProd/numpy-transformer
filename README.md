@@ -1,12 +1,13 @@
 # numpy-transformer
+> [!NOTE]  
+> This model was implemented in [numpy-nn-model](https://github.com/AkiRusProd/numpy-nn-model) repository; therefore, this repository is no longer supported.
+
 ## What is this?
 This is a fast numpy implementation of the Transformer (Seq2Seq) model in original paper "Attention is All You Need", that runs at CPU with numpy or GPU with cupy (very fast).
 
 <p align="center">
 <img src="images/The-Transformer-model-architecture.png" width=50% height=50%>
 </p>
-
-Some methods were borrowed from my [numpy-nn-model](https://github.com/AkiRusProd/numpy-nn-model) repository.
 
 ## Training
 The model was trained for 10 epochs. On my machine, training one epoch with CPU takes 3 hours, **but with GPU takes 2 minutes!!!! Thus training of all epochs takes 20 minutes**.  
